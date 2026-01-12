@@ -1,0 +1,6 @@
+@Atelie.Api_HostAddress = http://localhost:5277
+
+GET {{Atelie.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
