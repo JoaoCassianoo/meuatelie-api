@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Atelie.Api.Dtos;
 using Atelie.Api.Services;
+using Atelie.Api.Enums;
 
 namespace Atelie.Api.Controllers
 {
@@ -44,12 +45,37 @@ namespace Atelie.Api.Controllers
         }
 
         // GET: api/financeiro/resumo?ano=2025&mes=1
-        [HttpGet("resumo")]
+        [HttpGet("resumo/mensal")]
         public async Task<IActionResult> ObterResumoMensal([FromQuery] int ano, [FromQuery] int mes)
         {
             var resumo = await _service.ObterResumoMensal(ano, mes);
             return Ok(resumo);
         }
 
+        // GET: api/financeiro/resumo?ano=2025
+        [HttpGet("resumo/anual")]
+        public async Task<IActionResult> ObterResumoAnual([FromQuery] int ano)
+        {
+            var resumo = await _service.ObterResumoAnual(ano);
+            return Ok(resumo);
+        }
+
+        // GET: api/financeiro/movimentacoes?ano=2025&mes=1
+        [HttpGet("movimentacoes")]
+        public async Task<IActionResult> ObterMovimentacoes(
+            [FromQuery] int ano,
+            [FromQuery] int mes,
+            [FromQuery] ContextoFinanceiro? contexto,
+            [FromQuery] MeioPagamento? meioPagamento)
+        {
+            var lista = await _service.ObterMovimentacoesMensais(
+                ano,
+                mes,
+                contexto,
+                meioPagamento
+            );
+
+            return Ok(lista);
+        }
     }
 }
