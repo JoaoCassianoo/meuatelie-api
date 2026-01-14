@@ -4,6 +4,9 @@ using Atelie.Api.Dtos;
 using Atelie.Api.Services;
 using Atelie.Api.Enums;
 using Atelie.Api.Entities;
+using System.Text;
+using CsvHelper;
+using System.Globalization;
 
 namespace Atelie.Api.Controllers
 {
@@ -101,6 +104,29 @@ namespace Atelie.Api.Controllers
             return NoContent();
         }
 
+        // POST: api/Financeiro/importar?ano=2026&mes=3
+        [HttpPost("importar")]
+        public async Task<IActionResult> ImportarMovimentacoes(IFormFile arquivo, [FromQuery] int? ano, [FromQuery] int? mes)
+        {
+            if (arquivo == null || arquivo.Length == 0)
+                return BadRequest("Nenhum arquivo enviado.");
 
+            var tempFile = Path.GetTempFileName();
+            using (var stream = new FileStream(tempFile, FileMode.Create))
+            {
+                await arquivo.CopyToAsync(stream);
+            }
+
+            try
+            {
+                var result = await _service.ImportarDadosCsv(tempFile, ano, mes);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Retorna erro detalhado para facilitar debug do upload
+                return StatusCode(500, new { message = "Erro ao importar arquivo", detail = ex.Message });
+            }
+        }
     }
 }

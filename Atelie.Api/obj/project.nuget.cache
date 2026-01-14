@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "V2zjOUTj1Cw=",
+  "dgSpecHash": "tzgGxrSUdUk=",
   "success": true,
   "projectFilePath": "C:\\Users\\jjc4s\\Documents\\GitHub\\atelie-api\\Atelie.Api\\Atelie.Api.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\jjc4s\\.nuget\\packages\\csvhelper\\33.1.0\\csvhelper.33.1.0.nupkg.sha512",
     "C:\\Users\\jjc4s\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\jjc4s\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.22\\microsoft.aspnetcore.openapi.8.0.22.nupkg.sha512",
     "C:\\Users\\jjc4s\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.6.0.0.nupkg.sha512",
