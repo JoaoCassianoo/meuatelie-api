@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Atelie.Api.Dtos;
 using Atelie.Api.Services;
 using Atelie.Api.Enums;
+using Atelie.Api.Entities;
 
 namespace Atelie.Api.Controllers
 {
@@ -77,5 +78,29 @@ namespace Atelie.Api.Controllers
 
             return Ok(lista);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Atualizar(int id, MovimentacaoFinanceiro dto)
+        {
+            var ok = await _service.AtualizarMovimentacao(id, dto);
+
+            if (!ok)
+                return NotFound();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Excluir(int id)
+        {
+            var ok = await _service.ExcluirMovimentacao(id);
+
+            if (!ok)
+                return NotFound();
+
+            return NoContent();
+        }
+
+
     }
 }

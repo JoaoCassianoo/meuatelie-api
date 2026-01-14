@@ -94,5 +94,35 @@ namespace Atelie.Api.Services
                 .ToListAsync();
         }
 
+        public async Task<bool> AtualizarMovimentacao(int id, MovimentacaoFinanceiro dto)
+        {
+            var mov = await _context.MovimentacoesFinanceiro.FindAsync(id);
+
+            if (mov == null)
+                return false;
+
+            mov.Descricao = dto.Descricao;
+            mov.Valor = dto.Valor;
+            mov.Contexto = dto.Contexto;
+            mov.MeioPagamento = dto.MeioPagamento;
+            mov.Data = dto.Data;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ExcluirMovimentacao(int id)
+        {
+            var mov = await _context.MovimentacoesFinanceiro.FindAsync(id);
+
+            if (mov == null)
+                return false;
+
+            _context.MovimentacoesFinanceiro.Remove(mov);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
     }
 }
