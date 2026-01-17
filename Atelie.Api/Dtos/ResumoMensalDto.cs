@@ -5,7 +5,12 @@ namespace Atelie.Api.Dtos
         public decimal TotalEntradas { get; set; }
         public decimal TotalSaidas { get; set; }
 
+        public decimal TotalEntradasLoja { get; set; }
+        public decimal TotalSaidasLoja { get; set; }
         public decimal TotalLoja { get; set; }
+
+        public decimal TotalEntradasPessoal { get; set; }
+        public decimal TotalSaidasPessoal { get; set; }    
         public decimal TotalPessoal { get; set; }
 
         public decimal TotalDebito { get; set; }

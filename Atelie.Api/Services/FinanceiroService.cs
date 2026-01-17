@@ -38,6 +38,18 @@ namespace Atelie.Api.Services
                 TotalPessoal = movimentacoes
                     .Where(m => m.Contexto == ContextoFinanceiro.Pessoal)
                     .Sum(m => m.Valor),
+                TotalEntradasPessoal = movimentacoes
+                    .Where(m => m.Contexto == ContextoFinanceiro.Pessoal && m.Valor > 0)
+                    .Sum(m => m.Valor),
+                TotalSaidasPessoal = movimentacoes
+                    .Where(m => m.Contexto == ContextoFinanceiro.Pessoal && m.Valor < 0)
+                    .Sum(m => m.Valor),
+                TotalEntradasLoja = movimentacoes
+                    .Where(m => m.Contexto == ContextoFinanceiro.Loja && m.Valor > 0)
+                    .Sum(m => m.Valor),
+                TotalSaidasLoja = movimentacoes
+                    .Where(m => m.Contexto == ContextoFinanceiro.Loja && m.Valor < 0)
+                    .Sum(m => m.Valor),
                 TotalLoja = movimentacoes
                     .Where(m => m.Contexto == ContextoFinanceiro.Loja)
                     .Sum(m => m.Valor),
@@ -49,6 +61,8 @@ namespace Atelie.Api.Services
                     .Sum(m => m.Valor)
             };
         }
+
+
 
         public async Task<ResumoAnualDto> ObterResumoAnual(int ano)
         {
@@ -82,6 +96,7 @@ namespace Atelie.Api.Services
         public async Task<List<MovimentacaoFinanceiro>> ObterMovimentacoesMensais(
             int ano,
             int mes,
+            int? tipo,
             ContextoFinanceiro? contexto,
             MeioPagamento? meioPagamento)
         {
@@ -93,6 +108,11 @@ namespace Atelie.Api.Services
 
             if (meioPagamento.HasValue)
                 query = query.Where(m => m.MeioPagamento == meioPagamento.Value);
+
+            if (tipo == 1) // Entradas
+                query = query.Where(m => m.Valor > 0);
+            else if (tipo == 2) // Saídas
+                query = query.Where(m => m.Valor < 0);
 
             return await query
                 .OrderByDescending(m => m.Data)

@@ -56,6 +56,7 @@ namespace Atelie.Api.Controllers
             return Ok(resumo);
         }
 
+
         // GET: api/financeiro/resumo?ano=2025
         [HttpGet("resumo/anual")]
         public async Task<IActionResult> ObterResumoAnual([FromQuery] int ano)
@@ -63,18 +64,21 @@ namespace Atelie.Api.Controllers
             var resumo = await _service.ObterResumoAnual(ano);
             return Ok(resumo);
         }
+        
 
         // GET: api/financeiro/movimentacoes?ano=2025&mes=1
         [HttpGet("movimentacoes")]
         public async Task<IActionResult> ObterMovimentacoes(
             [FromQuery] int ano,
             [FromQuery] int mes,
+            [FromQuery] int? tipo,
             [FromQuery] ContextoFinanceiro? contexto,
             [FromQuery] MeioPagamento? meioPagamento)
         {
             var lista = await _service.ObterMovimentacoesMensais(
                 ano,
                 mes,
+                tipo,
                 contexto,
                 meioPagamento
             );
