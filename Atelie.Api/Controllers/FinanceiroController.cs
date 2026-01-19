@@ -72,14 +72,34 @@ namespace Atelie.Api.Controllers
             [FromQuery] int ano,
             [FromQuery] int mes,
             [FromQuery] int? tipo,
-            [FromQuery] ContextoFinanceiro? contexto,
-            [FromQuery] MeioPagamento? meioPagamento)
+            [FromQuery] int? contexto,
+            [FromQuery] int? meio)
         {
+            MeioPagamento? meioPagamento = new MeioPagamento?();
+            ContextoFinanceiro? contextoFinanceiro = new ContextoFinanceiro?();
+            if(meio == 3) {
+                meioPagamento = MeioPagamento.Pix;
+            }
+            else if(meio == 2) {
+                meioPagamento = MeioPagamento.CartaoDebito;
+            }
+            else if(meio == 1) {
+                meioPagamento = MeioPagamento.CartaoCredito;
+            }
+
+            if(contexto == 2) {
+                contextoFinanceiro = ContextoFinanceiro.Pessoal;
+            }
+            else if(contexto == 1) {
+                contextoFinanceiro = ContextoFinanceiro.Loja;
+            }
+                
+
             var lista = await _service.ObterMovimentacoesMensais(
                 ano,
                 mes,
                 tipo,
-                contexto,
+                contextoFinanceiro,
                 meioPagamento
             );
 
