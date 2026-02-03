@@ -3,6 +3,7 @@ using System;
 using Atelie.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atelie.Api.Migrations
 {
     [DbContext(typeof(AtelieDbContext))]
-    partial class AtelieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260121145838_RestruturacaoProduto")]
+    partial class RestruturacaoProduto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -159,7 +162,7 @@ namespace Atelie.Api.Migrations
                     b.ToTable("MovimentacoesFinanceiro");
                 });
 
-            modelBuilder.Entity("Atelie.Api.Entities.PecaPronta", b =>
+            modelBuilder.Entity("Atelie.Api.Entities.Produto", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -168,31 +171,36 @@ namespace Atelie.Api.Migrations
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DataVenda")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Descricao")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("FotoUrl")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Tipo")
+                    b.Property<int?>("EncomendaId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Titulo")
+                    b.Property<string>("Nome")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Valor")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("Vendida")
+                    b.Property<bool>("Vendido")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PecasProntas");
+                    b.HasIndex("EncomendaId");
+
+                    b.ToTable("Produtos");
                 });
 
-            modelBuilder.Entity("Atelie.Api.Entities.PecaProntaMaterial", b =>
+            modelBuilder.Entity("Atelie.Api.Entities.ProdutoMaterial", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -201,7 +209,7 @@ namespace Atelie.Api.Migrations
                     b.Property<int>("MaterialId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PecaProntaId")
+                    b.Property<int>("ProdutoId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("QuantidadeUsada")
@@ -211,9 +219,9 @@ namespace Atelie.Api.Migrations
 
                     b.HasIndex("MaterialId");
 
-                    b.HasIndex("PecaProntaId");
+                    b.HasIndex("ProdutoId");
 
-                    b.ToTable("PecaProntaMateriais");
+                    b.ToTable("ProdutoMateriais");
                 });
 
             modelBuilder.Entity("Atelie.Api.Entities.Tarefa", b =>
@@ -260,7 +268,7 @@ namespace Atelie.Api.Migrations
                     b.Property<string>("Observacao")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("PecaProntaId")
+                    b.Property<int>("ProdutoId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Quantidade")
@@ -271,7 +279,7 @@ namespace Atelie.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PecaProntaId");
+                    b.HasIndex("ProdutoId");
 
                     b.ToTable("Vendas");
                 });
@@ -287,7 +295,17 @@ namespace Atelie.Api.Migrations
                     b.Navigation("Material");
                 });
 
-            modelBuilder.Entity("Atelie.Api.Entities.PecaProntaMaterial", b =>
+            modelBuilder.Entity("Atelie.Api.Entities.Produto", b =>
+                {
+                    b.HasOne("Atelie.Api.Entities.Encomenda", "Encomenda")
+                        .WithMany()
+                        .HasForeignKey("EncomendaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Encomenda");
+                });
+
+            modelBuilder.Entity("Atelie.Api.Entities.ProdutoMaterial", b =>
                 {
                     b.HasOne("Atelie.Api.Entities.Material", "Material")
                         .WithMany()
@@ -295,15 +313,15 @@ namespace Atelie.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Atelie.Api.Entities.PecaPronta", "PecaPronta")
-                        .WithMany("Materiais")
-                        .HasForeignKey("PecaProntaId")
+                    b.HasOne("Atelie.Api.Entities.Produto", "Produto")
+                        .WithMany("ProdutoMateriais")
+                        .HasForeignKey("ProdutoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Material");
 
-                    b.Navigation("PecaPronta");
+                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("Atelie.Api.Entities.Tarefa", b =>
@@ -319,13 +337,13 @@ namespace Atelie.Api.Migrations
 
             modelBuilder.Entity("Atelie.Api.Entities.Venda", b =>
                 {
-                    b.HasOne("Atelie.Api.Entities.PecaPronta", "PecaPronta")
+                    b.HasOne("Atelie.Api.Entities.Produto", "Produto")
                         .WithMany()
-                        .HasForeignKey("PecaProntaId")
+                        .HasForeignKey("ProdutoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PecaPronta");
+                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("Atelie.Api.Entities.ListaTarefa", b =>
@@ -333,9 +351,9 @@ namespace Atelie.Api.Migrations
                     b.Navigation("Tarefas");
                 });
 
-            modelBuilder.Entity("Atelie.Api.Entities.PecaPronta", b =>
+            modelBuilder.Entity("Atelie.Api.Entities.Produto", b =>
                 {
-                    b.Navigation("Materiais");
+                    b.Navigation("ProdutoMateriais");
                 });
 #pragma warning restore 612, 618
         }

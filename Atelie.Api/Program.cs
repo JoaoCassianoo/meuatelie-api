@@ -8,7 +8,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+// Registrar Services
 builder.Services.AddScoped<FinanceiroService>();
+builder.Services.AddScoped<MaterialService>();
+builder.Services.AddScoped<EstoqueService>();
+builder.Services.AddScoped<PecaProntaService>();
+builder.Services.AddScoped<VendaService>();
+builder.Services.AddScoped<EncomendaService>();
+builder.Services.AddScoped<TodoListService>();
 
 // DbContext + SQLite
 builder.Services.AddDbContext<AtelieDbContext>(options =>
