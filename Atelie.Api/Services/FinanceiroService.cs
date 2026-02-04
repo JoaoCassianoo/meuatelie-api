@@ -3,12 +3,9 @@ using Atelie.Api.Dtos;
 using Atelie.Api.Entities;
 using Atelie.Api.Enums;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.IO;
-using System.Collections.Generic;
 
 namespace Atelie.Api.Services
 {
@@ -16,82 +13,54 @@ namespace Atelie.Api.Services
     {
         private readonly AtelieDbContext _context;
 
-        public FinanceiroService(AtelieDbContext dbContext)
+        public FinanceiroService(AtelieDbContext context)
         {
-            _context = dbContext;   // Constructor implementation
+            _context = context;
         }
+
+        #region Resumos
 
         public async Task<ResumoMensalDto> ObterResumoMensal(int ano, int mes)
         {
-            var movimentacoes = await _context.MovimentacoesFinanceiro
+            var movs = await _context.MovimentacoesFinanceiro
                 .Where(m => m.Data.Year == ano && m.Data.Month == mes)
                 .ToListAsync();
 
             return new ResumoMensalDto
             {
-                TotalEntradas = movimentacoes
-                    .Where(m => m.Valor > 0)
-                    .Sum(m => m.Valor),
-                TotalSaidas = movimentacoes
-                    .Where(m => m.Valor < 0)
-                    .Sum(m => m.Valor),
-                TotalPessoal = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Pessoal)
-                    .Sum(m => m.Valor),
-                TotalEntradasPessoal = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Pessoal && m.Valor > 0)
-                    .Sum(m => m.Valor),
-                TotalSaidasPessoal = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Pessoal && m.Valor < 0)
-                    .Sum(m => m.Valor),
-                TotalEntradasLoja = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Loja && m.Valor > 0)
-                    .Sum(m => m.Valor),
-                TotalSaidasLoja = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Loja && m.Valor < 0)
-                    .Sum(m => m.Valor),
-                TotalLoja = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Loja)
-                    .Sum(m => m.Valor),
-                TotalDebito = movimentacoes
-                    .Where(m => m.MeioPagamento == MeioPagamento.CartaoDebito)
-                    .Sum(m => m.Valor),
-                TotalCredito = movimentacoes
-                    .Where(m => m.MeioPagamento == MeioPagamento.CartaoCredito)
-                    .Sum(m => m.Valor)
+                TotalEntradas = movs.Where(x => x.Valor > 0).Sum(x => x.Valor),
+                TotalSaidas = movs.Where(x => x.Valor < 0).Sum(x => x.Valor),
+                TotalPessoal = movs.Sum(x => x.Valor),
+                TotalEntradasPessoal = movs.Where(x => x.Valor > 0).Sum(x => x.Valor),
+                TotalSaidasPessoal = movs.Where(x => x.Valor < 0).Sum(x => x.Valor),
+                TotalEntradasLoja = 0,
+                TotalSaidasLoja = 0,
+                TotalLoja = 0,
+                TotalDebito = movs.Where(x => x.MeioPagamento == MeioPagamento.CartaoDebito).Sum(x => x.Valor),
+                TotalCredito = movs.Where(x => x.MeioPagamento == MeioPagamento.CartaoCredito).Sum(x => x.Valor)
             };
         }
 
-
-
         public async Task<ResumoAnualDto> ObterResumoAnual(int ano)
         {
-            var movimentacoes = await _context.MovimentacoesFinanceiro
+            var movs = await _context.MovimentacoesFinanceiro
                 .Where(m => m.Data.Year == ano)
                 .ToListAsync();
 
             return new ResumoAnualDto
             {
-                TotalEntradas = movimentacoes
-                    .Where(m => m.Valor > 0)
-                    .Sum(m => m.Valor),
-                TotalSaidas = movimentacoes
-                    .Where(m => m.Valor < 0)
-                    .Sum(m => m.Valor),
-                TotalPessoal = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Pessoal)
-                    .Sum(m => m.Valor),
-                TotalLoja = movimentacoes
-                    .Where(m => m.Contexto == ContextoFinanceiro.Loja)
-                    .Sum(m => m.Valor),
-                TotalDebito = movimentacoes
-                    .Where(m => m.MeioPagamento == MeioPagamento.CartaoDebito)
-                    .Sum(m => m.Valor),
-                TotalCredito = movimentacoes
-                    .Where(m => m.MeioPagamento == MeioPagamento.CartaoCredito)
-                    .Sum(m => m.Valor)
+                TotalEntradas = movs.Where(x => x.Valor > 0).Sum(x => x.Valor),
+                TotalSaidas = movs.Where(x => x.Valor < 0).Sum(x => x.Valor),
+                TotalPessoal = movs.Sum(x => x.Valor),
+                TotalLoja = 0,
+                TotalDebito = movs.Where(x => x.MeioPagamento == MeioPagamento.CartaoDebito).Sum(x => x.Valor),
+                TotalCredito = movs.Where(x => x.MeioPagamento == MeioPagamento.CartaoCredito).Sum(x => x.Valor)
             };
         }
+
+        #endregion
+
+        #region CRUD
 
         public async Task<List<MovimentacaoFinanceiro>> ObterMovimentacoesMensais(
             int ano,
@@ -103,15 +72,12 @@ namespace Atelie.Api.Services
             var query = _context.MovimentacoesFinanceiro
                 .Where(m => m.Data.Year == ano && m.Data.Month == mes);
 
-            if (contexto.HasValue)
-                query = query.Where(m => m.Contexto == contexto.Value);
-
             if (meioPagamento.HasValue)
                 query = query.Where(m => m.MeioPagamento == meioPagamento.Value);
 
-            if (tipo == 1) // Entradas
+            if (tipo == 1)
                 query = query.Where(m => m.Valor > 0);
-            else if (tipo == 2) // Saídas
+            else if (tipo == 2)
                 query = query.Where(m => m.Valor < 0);
 
             return await query
@@ -122,11 +88,9 @@ namespace Atelie.Api.Services
         public async Task<bool> AtualizarMovimentacao(int id, MovimentacaoFinanceiro dto)
         {
             var mov = await _context.MovimentacoesFinanceiro.FindAsync(id);
+            if (mov == null) return false;
 
-            if (mov == null)
-                return false;
-
-            mov.Descricao = dto.Descricao;
+            mov.Descricao = CleanAndExtractName(dto.Descricao);
             mov.Valor = dto.Valor;
             mov.Contexto = dto.Contexto;
             mov.MeioPagamento = dto.MeioPagamento;
@@ -139,240 +103,182 @@ namespace Atelie.Api.Services
         public async Task<bool> ExcluirMovimentacao(int id)
         {
             var mov = await _context.MovimentacoesFinanceiro.FindAsync(id);
-
-            if (mov == null)
-                return false;
+            if (mov == null) return false;
 
             _context.MovimentacoesFinanceiro.Remove(mov);
             await _context.SaveChangesAsync();
-
             return true;
         }
+
+        #endregion
+
+        #region Importação CSV
 
         public async Task<ImportResultDto> ImportarDadosCsv(string caminhoArquivo, int? ano = null, int? mes = null)
         {
             var result = new ImportResultDto();
+            var ptBr = CultureInfo.GetCultureInfo("pt-BR");
 
-            // Ler sempre em UTF-8 — arquivo sem problemas de codificação
             var text = await File.ReadAllTextAsync(caminhoArquivo, Encoding.UTF8);
             var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-
-            var ptBr = CultureInfo.GetCultureInfo("pt-BR");
-            int imported = 0;
 
             int targetMonth = mes ?? DetectMonthFromFileName(caminhoArquivo) ?? DateTime.Now.Month;
             int targetYear = ano ?? DateTime.Now.Year;
 
-            for (int i = 0; i < lines.Length; i++)
+            int imported = 0;
+
+            var firstLine = lines[0].ToLowerInvariant();
+            var titles = firstLine.Split(',');
+            var isCartao = true;
+            if(titles.Length > 3)
+                isCartao = false;
+
+            if (isCartao)
             {
-                var lineNumber = i + 1;
-                var line = lines[i];
-
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-
-                var trimmed = line.Trim();
-                var upper = trimmed.ToUpperInvariant();
-
-                // Ignorar cabeçalhos e linhas de totais
-                if (upper.Contains("DESCRI") || upper.Contains("TOTAL") || upper.Contains("SALDO"))
-                    continue;
-
-                var parts = trimmed.Split(';');
-
-                // Função local para processar cada "lado" (0 = esquerda, 5 = direita)
-                void ProcessSide(int startIndex, string side)
+                for (int i = 1; i < lines.Length; i++)
                 {
-                    try
+                    var line = lines[i];
+
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    var parts = line.Split(',');
+
+                    DateTime data;
+                    var dataStr = parts[0].Trim();
+                    if (int.TryParse(dataStr, out var day))
+                        data = new DateTime(targetYear, targetMonth, Math.Clamp(day, 1, 28));
+                    else if (!DateTime.TryParse(dataStr, ptBr, DateTimeStyles.None, out data))
+                        data = DateTime.Now;
+
+                    var descricao = parts[1].Trim();
+                    var meio = DetectarMeioPagamento(parts[1].Trim(), isCartao);
+                    
+                    var valor = parts[2];
+                    var valorNormalizado = valor.Replace(".", ",");
+                    var valorFinal = -decimal.Parse(valorNormalizado, ptBr);
+
+                    Console.WriteLine($"Parsed data: {data}, descricao: {descricao}, valor: {valorFinal}, meio: {meio}");
+
+                    _context.MovimentacoesFinanceiro.Add(new MovimentacaoFinanceiro
                     {
-                        if (parts.Length <= startIndex)
-                            return;
+                        Descricao = descricao,
+                        Valor = valorFinal,
+                        Contexto = ContextoFinanceiro.Pessoal,
+                        MeioPagamento = meio,
+                        Data = data
+                    });
 
-                        var descricao = parts[startIndex].Trim();
-                        if (string.IsNullOrWhiteSpace(descricao))
-                            return;
-
-                        var descricaoUpper = descricao.ToUpperInvariant();
-                        if (descricaoUpper.Contains("TOTAL") || descricaoUpper.Contains("SALDO"))
-                            return;
-
-                        // Valor
-                        var valorStr = parts.Length > startIndex + 1 ? parts[startIndex + 1].Trim() : string.Empty;
-                        if (string.IsNullOrWhiteSpace(valorStr))
-                        {
-                            result.Errors.Add(new ParsingError { LineNumber = lineNumber, Side = side, RawText = line, Message = "Valor vazio" });
-                            return;
-                        }
-
-                        if (!decimal.TryParse(valorStr, NumberStyles.Number | NumberStyles.AllowLeadingSign, ptBr, out var valor))
-                        {
-                            // Tenta limpar e reparsear (substitui ponto de milhar)
-                            var clean = valorStr.Replace(".", string.Empty).Replace(",", ".");
-                            if (!decimal.TryParse(clean, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out valor))
-                            {
-                                result.Errors.Add(new ParsingError { LineNumber = lineNumber, Side = side, RawText = line, Message = $"Valor inválido: '{valorStr}'" });
-                                return;
-                            }
-                        }
-
-                        // Data (pode ser apenas o dia)
-                        DateTime data;
-                        var dataStr = parts.Length > startIndex + 2 ? parts[startIndex + 2].Trim() : string.Empty;
-                        if (int.TryParse(dataStr, out var day))
-                        {
-                            try { data = new DateTime(targetYear, targetMonth, day); }
-                            catch { data = DateTime.Now; }
-                        }
-                        else if (DateTime.TryParse(dataStr, ptBr, DateTimeStyles.None, out var parsed))
-                        {
-                            data = parsed;
-                        }
-                        else
-                        {
-                            data = DateTime.Now;
-                        }
-
-                        // Tipo -> Contexto
-                        var tipoStr = parts.Length > startIndex + 3 ? parts[startIndex + 3].Trim() : string.Empty;
-                        ContextoFinanceiro contexto = ContextoFinanceiro.Pessoal;
-                        if (!string.IsNullOrWhiteSpace(tipoStr))
-                        {
-                            if (tipoStr.ToLowerInvariant().Contains("loja"))
-                                contexto = ContextoFinanceiro.Loja;
-                            else if (tipoStr.ToLowerInvariant().Contains("pessoal"))
-                                contexto = ContextoFinanceiro.Pessoal;
-                        }
-
-                        // Inferir MeioPagamento a partir da descrição
-                        MeioPagamento meio = MeioPagamento.Pix;
-                        var descLower = descricao.ToLowerInvariant();
-                        if (descLower.Contains("cartao") || descLower.Contains("cartão") || descLower.Contains("credito") || descLower.Contains("crédito"))
-                            meio = MeioPagamento.CartaoCredito;
-                        else if (descLower.Contains("debito") || descLower.Contains("débito"))
-                            meio = MeioPagamento.CartaoDebito;
-                        else if (descLower.Contains("pix"))
-                            meio = MeioPagamento.Pix;
-
-                        // Limpar e tentar extrair apenas o nome quando aplicável
-                        descricao = CleanAndExtractName(descricao);
-
-                        // Truncar descrição a um tamanho razoável
-                        const int maxDesc = 250;
-                        if (descricao.Length > maxDesc)
-                            descricao = descricao.Substring(0, maxDesc);
-
-                        var mov = new MovimentacaoFinanceiro
-                        {
-                            Descricao = descricao,
-                            Valor = valor,
-                            Contexto = contexto,
-                            MeioPagamento = meio,
-                            Data = data
-                        };
-
-                        _context.MovimentacoesFinanceiro.Add(mov);
-                        imported++;
-                    }
-                    catch (Exception ex)
-                    {
-                        result.Errors.Add(new ParsingError { LineNumber = lineNumber, Side = side, RawText = line, Message = ex.Message });
-                    }
+                    imported++;
                 }
+            }
+            else if(!isCartao){
 
-                // Processa lado esquerdo
-                ProcessSide(0, "left");
-                // Processa lado direito (no CSV há uma coluna extra vazia, então o segundo bloco começa em 5)
-                ProcessSide(5, "right");
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    var line = lines[i];
+                    var lineNumber = i;
+
+                    if (string.IsNullOrWhiteSpace(line))
+                        continue;
+
+                    var parts = line.Split(',');
+                    
+                    Console.WriteLine($"{i} Split into {parts.Length} parts");
+
+                    if (parts.Length < 3)
+                    {
+                        Console.WriteLine($"Skipping line {lineNumber}: not enough parts");
+                        continue;
+                    }
+
+                    DateTime data;
+                    var dataStr = parts[0].Trim();
+                    if (int.TryParse(dataStr, out var day))
+                        data = new DateTime(targetYear, targetMonth, Math.Clamp(day, 1, 28));
+                    else if (!DateTime.TryParse(dataStr, ptBr, DateTimeStyles.None, out data))
+                        data = DateTime.Now;
+
+                    var descricao = CleanAndExtractName(parts[3].Trim());
+                    var meio = DetectarMeioPagamento(parts[3].Trim(), isCartao);
+                    
+                    var valor = parts[1];
+                    var valorNormalizado = valor.Replace(".", ",");
+
+
+                    Console.WriteLine($"Parsed data: {data}, descricao: {descricao}, valor: {valor}, meio: {meio}");
+
+                    _context.MovimentacoesFinanceiro.Add(new MovimentacaoFinanceiro
+                    {
+                        Descricao = descricao,
+                        Valor = decimal.Parse(valorNormalizado, ptBr),
+                        Contexto = ContextoFinanceiro.Pessoal,
+                        MeioPagamento = meio,
+                        Data = data
+                    });
+
+                    imported++;
+                }
             }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                // Se falhar no Save, devolve erro geral
-                result.Errors.Add(new ParsingError { LineNumber = -1, Side = "save", RawText = string.Empty, Message = ex.Message });
-            }
-
+            await _context.SaveChangesAsync();
             result.Imported = imported;
             return result;
         }
 
-        private int? DetectMonthFromFileName(string path)
+        private static MeioPagamento DetectarMeioPagamento(string descricao, bool isCartao)
         {
-            var name = Path.GetFileName(path)?.ToUpperInvariant() ?? string.Empty;
-            var months = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-            {
-                {"JANEIRO", 1}, {"FEVEREIRO", 2}, {"MARCO", 3}, {"MARÇO", 3}, {"ABRIL", 4}, {"MAIO", 5}, {"JUNHO", 6},
-                {"JULHO", 7}, {"AGOSTO", 8}, {"SETEMBRO", 9}, {"OUTUBRO", 10}, {"NOVEMBRO", 11}, {"DEZEMBRO", 12}
-            };
+            var d = descricao.ToLowerInvariant();
 
-            foreach (var kv in months)
-            {
-                if (name.Contains(kv.Key))
-                    return kv.Value;
-            }
+            if (isCartao)
+                return MeioPagamento.CartaoCredito;
 
-            return null;
+            if (d.Contains("débito") || d.Contains("debito"))
+                return MeioPagamento.CartaoDebito;
+
+            if (d.Contains("crédito") || d.Contains("credito"))
+                return MeioPagamento.CartaoCredito;
+
+            if (d.Contains("pix"))
+                return MeioPagamento.Pix;
+
+            return MeioPagamento.Pix;
         }
 
         private static string CleanAndExtractName(string descricao)
         {
             if (string.IsNullOrWhiteSpace(descricao))
-                return descricao ?? string.Empty;
+                return string.Empty;
 
-            var d = descricao.Trim();
+            var d = descricao.ToUpperInvariant();
 
-            // Remove bullets e sequências comuns de encoding
-            d = d.Replace("â¢", " ").Replace("Â", " ").Replace("�", " ").Replace("\uFFFD", " ");
-            d = Regex.Replace(d, @"\s+", " ").Trim();
+            if (!d.Contains('-'))
+                return d.Trim();
 
-            // Padrões para extrair nome
-            var patterns = new[]
-            {
-                new Regex(@"(?:Transfer(?:ê|e)ncia|Transfer|Transferência).* -\s*(?<name>[^-;]+?)\s* -", RegexOptions.IgnoreCase),
-                new Regex(@"(?:Transfer(?:ê|e)ncia|Transfer|Transferência).* -\s*(?<name>[^;]+)$", RegexOptions.IgnoreCase),
-                new Regex(@"Reembolso.* -\s*(?<name>[^-;]+?)\s* -", RegexOptions.IgnoreCase),
-                new Regex(@"Compra.* -\s*(?<name>[^;]+)$", RegexOptions.IgnoreCase),
-                new Regex(@"-\s*(?<name>[A-Z][^;\-]{2,})\s* -", RegexOptions.IgnoreCase)
-            };
-
-            foreach (var rx in patterns)
-            {
-                var m = rx.Match(d);
-                if (m.Success && m.Groups["name"] != null)
-                {
-                    var candidate = m.Groups["name"].Value.Trim();
-
-                    // Remove parcelas / palavras indesejadas
-                    candidate = Regex.Replace(candidate, @"parcel\w*.*$", "", RegexOptions.IgnoreCase).Trim();
-                    candidate = Regex.Replace(candidate, @"Ag[eê]ncia.*$", "", RegexOptions.IgnoreCase).Trim();
-                    candidate = Regex.Replace(candidate, @"Conta.*$", "", RegexOptions.IgnoreCase).Trim();
-
-                    // Rejeita se contiver muita informação não-nome (ex.: números de conta)
-                    if (Regex.IsMatch(candidate, @"\d") || candidate.Length < 2)
-                        continue;
-
-                    return candidate;
-                }
-            }
-
-            // Fallback: se contém ' - ' pega a segunda parte quando ela for um nome (sem palavras como Agencia/Conta)
             var parts = d.Split('-');
-            if (parts.Length >= 2)
-            {
-                var maybe = parts[1].Trim();
-                if (!Regex.IsMatch(maybe, "Conta|Ag[eê]ncia|NU PAGAMENTOS|PAGSEGURO|EBANX|MERCADE" , RegexOptions.IgnoreCase)
-                    && !Regex.IsMatch(maybe, "\\d"))
-                {
-                    if (maybe.Length > 0 && maybe.Length <= 200)
-                        return maybe;
-                }
-            }
 
-            return d;
+            return parts[1].Trim();
+
         }
 
+        private static int? DetectMonthFromFileName(string path)
+        {
+            var name = Path.GetFileName(path)?.ToUpperInvariant() ?? "";
+
+            var months = new Dictionary<string, int>
+            {
+                {"JANEIRO",1},{"FEVEREIRO",2},{"MARCO",3},{"MARÇO",3},{"ABRIL",4},
+                {"MAIO",5},{"JUNHO",6},{"JULHO",7},{"AGOSTO",8},
+                {"SETEMBRO",9},{"OUTUBRO",10},{"NOVEMBRO",11},{"DEZEMBRO",12}
+            };
+
+            foreach (var m in months)
+                if (name.Contains(m.Key))
+                    return m.Value;
+
+            return null;
+        }
+
+        #endregion
     }
 }
