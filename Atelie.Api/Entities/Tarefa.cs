@@ -5,6 +5,7 @@ namespace Atelie.Api.Entities
     public class Tarefa
     {
         public int Id { get; set; }
+        public Guid UserId { get; set; }
         public int ListaTarefaId { get; set; }
         [JsonIgnore]
         public ListaTarefa ListaTarefa { get; set; } = null!;

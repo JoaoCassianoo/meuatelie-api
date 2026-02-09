@@ -5,6 +5,7 @@ namespace Atelie.Api.Entities
     public class Encomenda
     {
         public int Id { get; set; }
+        public Guid UserId { get; set; }
         public string Descricao { get; set; } = string.Empty;
         public string? Cliente { get; set; }
         public StatusEncomenda Status { get; set; } = StatusEncomenda.Pendente;

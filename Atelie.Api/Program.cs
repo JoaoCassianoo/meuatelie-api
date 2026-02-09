@@ -18,9 +18,10 @@ builder.Services.AddScoped<VendaService>();
 builder.Services.AddScoped<EncomendaService>();
 builder.Services.AddScoped<TodoListService>();
 
-// DbContext + SQLite
+// DbContext + PostgreSQL usando appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AtelieDbContext>(options =>
-    options.UseSqlite("Data Source=atelie.db")
+    options.UseNpgsql(connectionString)
 );
 
 builder.Services.AddCors(options =>
@@ -28,15 +29,15 @@ builder.Services.AddCors(options =>
     options.AddPolicy("FrontendPolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins("http://localhost:5173") // front local
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
-
 var app = builder.Build();
 
+// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

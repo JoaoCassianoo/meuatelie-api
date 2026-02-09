@@ -5,6 +5,7 @@ namespace Atelie.Api.Entities
     public class PecaPronta
     {
         public int Id { get; set; }
+        public Guid UserId { get; set; }
         public string Titulo { get; set; } = string.Empty;
         public string? Descricao { get; set; }  // Tamanho/detalhes
         public decimal Valor { get; set; }

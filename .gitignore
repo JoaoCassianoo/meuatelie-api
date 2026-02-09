@@ -1,0 +1,22 @@
+# Build / bin / obj
+bin/
+obj/
+
+# Arquivos de usuário do Visual Studio
+*.user
+*.suo
+
+# Pastas do VS Code
+.vscode/
+
+# Arquivos de log
+*.log
+
+# Migrations antigas
+Migrations/
+
+# Banco local SQLite
+*.db
+
+# Arquivo de variáveis de ambiente
+.env

@@ -32,13 +32,43 @@ namespace Atelie.Api.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configurações de relacionamentos
+            // === Conversions de enums para string ===
+            modelBuilder.Entity<Material>()
+                .Property(m => m.Categoria)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Material>()
+                .Property(m => m.Status)
+                .HasConversion<string>();
+            
+            modelBuilder.Entity<MovimentacaoFinanceiro>()
+                .Property(m => m.Contexto)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<MovimentacaoFinanceiro>()
+                .Property(m => m.MeioPagamento)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<Encomenda>()
+                .Property(e => e.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<MovimentacaoEstoque>()
+                .Property(m => m.Tipo)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<PecaPronta>()
+                .Property(p => p.Tipo)
+                .HasConversion<string>();
+
+            // ===============================
+
+            // Relacionamentos existentes
             modelBuilder.Entity<MovimentacaoEstoque>()
                 .HasOne(m => m.Material)
                 .WithMany()
                 .HasForeignKey(m => m.MaterialId);
 
-            // PecaPronta - PecaProntaMaterial - Material
             modelBuilder.Entity<PecaProntaMaterial>()
                 .HasOne(pm => pm.PecaPronta)
                 .WithMany(p => p.Materiais)
@@ -50,7 +80,6 @@ namespace Atelie.Api.Data
                 .WithMany()
                 .HasForeignKey(pm => pm.MaterialId);
 
-            // Venda - PecaPronta
             modelBuilder.Entity<Venda>()
                 .HasOne(v => v.PecaPronta)
                 .WithMany()
@@ -62,6 +91,5 @@ namespace Atelie.Api.Data
                 .HasForeignKey(t => t.ListaTarefaId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
-
     }
 }

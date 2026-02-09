@@ -6,6 +6,8 @@ public class MovimentacaoFinanceiro
 {
     public int Id { get; set; }
 
+    public Guid UserId { get; set; }
+
     public string Descricao { get; set; } = null!;
 
     public decimal Valor { get; set; } // +entrada / -saida
