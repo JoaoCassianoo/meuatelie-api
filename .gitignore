@@ -1,22 +1,29 @@
-# Build / bin / obj
+# Build output
 bin/
 obj/
 
-# Arquivos de usuário do Visual Studio
-*.user
+# User-specific
 *.suo
+*.user
+*.userosscache
+*.sln.docstates
 
-# Pastas do VS Code
+# VS/IDE folders
+.vs/
 .vscode/
 
-# Arquivos de log
+# OS files
+.DS_Store
+Thumbs.db
+
+# Configs sensíveis
+**/appsettings.json
+**/appsettings.*.json
+.env
+.env.*
+
+# Logs
 *.log
 
-# Migrations antigas
-Migrations/
-
-# Banco local SQLite
+# Database files
 *.db
-
-# Arquivo de variáveis de ambiente
-.env
