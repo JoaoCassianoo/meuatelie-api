@@ -16,7 +16,7 @@ namespace Atelie.Api.Services
         }
 
         
-        public async Task<object> ObterPaginado(Guid userId, int page, int pageSize)
+        public async Task<object> ObterPaginado(Guid userId)
         {
             var query = _context.Materiais
                 .AsNoTracking()
@@ -26,11 +26,10 @@ namespace Atelie.Api.Services
 
             var dados = await query
                 .OrderBy(m => m.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .AsNoTracking()
                 .ToListAsync();
 
-            return new { total, page, pageSize, dados };
+            return dados;
         }
 
 

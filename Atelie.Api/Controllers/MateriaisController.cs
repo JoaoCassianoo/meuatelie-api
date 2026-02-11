@@ -29,14 +29,11 @@ namespace Atelie.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> ObterTodos(
-            int page,
-            int pageSize = 20
-        )
+        public async Task<IActionResult> ObterTodos()
         {
             var userId = ObterUsuarioId();
 
-            var resultado = await _service.ObterPaginado(userId, page, pageSize);
+            var resultado = await _service.ObterPaginado(userId);
 
             return Ok(resultado);
         }
