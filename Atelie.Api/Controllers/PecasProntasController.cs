@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Atelie.Api.Services;
 using Atelie.Api.Entities;
 using Atelie.Api.Enums;
+using System.Security.Claims;
 
 namespace Atelie.Api.Controllers
 {
@@ -16,6 +17,14 @@ namespace Atelie.Api.Controllers
             _service = service;
         }
 
+        private Guid ObterUsuarioId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return userId != null ? Guid.Parse(userId) : Guid.Empty;
+
+        }
+
         // POST: api/PecasProntas
         [HttpPost]
         public async Task<IActionResult> CriarPecaPronta([FromBody] CriarPecaProntaRequest request)
@@ -24,6 +33,7 @@ namespace Atelie.Api.Controllers
                 return BadRequest("Título da peça é obrigatório");
 
             var pecaPronta = await _service.CriarPecaPronta(
+                ObterUsuarioId(),
                 request.Titulo,
                 request.Valor,
                 request.Descricao,
@@ -38,23 +48,8 @@ namespace Atelie.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> ObterTodas()
         {
-            var pecasProntas = await _service.ObterTodas();
-            return Ok(pecasProntas);
-        }
-
-        // GET: api/PecasProntas/nao-vendidas
-        [HttpGet("nao-vendidas")]
-        public async Task<IActionResult> ObterNaoVendidas()
-        {
-            var pecasProntas = await _service.ObterPecasNaoVendidas();
-            return Ok(pecasProntas);
-        }
-
-        // GET: api/PecasProntas/tipo/{tipo}
-        [HttpGet("tipo/{tipo}")]
-        public async Task<IActionResult> ObterPorTipo(TipoPecaPronta tipo)
-        {
-            var pecasProntas = await _service.ObterPorTipo(tipo);
+            var userId = ObterUsuarioId();
+            var pecasProntas = await _service.ObterTodas(userId);
             return Ok(pecasProntas);
         }
 
@@ -62,7 +57,8 @@ namespace Atelie.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> ObterPorId(int id)
         {
-            var pecaPronta = await _service.ObterPorId(id);
+            var userId = ObterUsuarioId();
+            var pecaPronta = await _service.ObterPorId(userId, id);
             if (pecaPronta == null)
                 return NotFound();
 
@@ -76,7 +72,8 @@ namespace Atelie.Api.Controllers
             if (string.IsNullOrWhiteSpace(request.Titulo))
                 return BadRequest("Título da peça é obrigatório");
 
-            var sucesso = await _service.Atualizar(id, request.Titulo, request.Valor, request.Descricao, request.FotoUrl, request.Tipo, request.Vendida);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.Atualizar(userId, id, request.Titulo, request.Valor, request.Descricao, request.FotoUrl, request.Tipo, request.Vendida);
             if (!sucesso)
                 return NotFound();
 
@@ -87,7 +84,8 @@ namespace Atelie.Api.Controllers
         [HttpPut("{id}/marcar-como-vendida")]
         public async Task<IActionResult> MarcarComoVendida(int id)
         {
-            var sucesso = await _service.MarcarComoVendida(id);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.MarcarComoVendida(userId, id);
             if (!sucesso)
                 return NotFound();
 
@@ -101,7 +99,8 @@ namespace Atelie.Api.Controllers
             if (request.MaterialId <= 0 || request.QuantidadeUsada <= 0)
                 return BadRequest("MaterialId e QuantidadeUsada devem ser maiores que 0");
 
-            var sucesso = await _service.AdicionarMaterial(id, request.MaterialId, request.QuantidadeUsada);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.AdicionarMaterial(userId, id, request.MaterialId, request.QuantidadeUsada);
             if (!sucesso)
                 return NotFound();
 
@@ -112,7 +111,8 @@ namespace Atelie.Api.Controllers
         [HttpDelete("{id}/materiais/{materialId}")]
         public async Task<IActionResult> RemoverMaterial(int id, int materialId)
         {
-            var sucesso = await _service.RemoverMaterial(id, materialId);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.RemoverMaterial(userId, id, materialId);
             if (!sucesso)
                 return NotFound();
 
@@ -123,7 +123,8 @@ namespace Atelie.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deletar(int id)
         {
-            var sucesso = await _service.Deletar(id);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.Deletar(userId, id);
             if (!sucesso)
                 return NotFound();
 

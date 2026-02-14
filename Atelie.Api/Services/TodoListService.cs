@@ -13,10 +13,11 @@ namespace Atelie.Api.Services
             _context = context;
         }
 
-        public async Task<ListaTarefa> CriarLista(string titulo)
+        public async Task<ListaTarefa> CriarLista( Guid userId, string titulo)
         {
             var lista = new ListaTarefa
             {
+                UserId = userId,
                 Titulo = titulo,
                 DataCriacao = DateTime.UtcNow
             };
@@ -27,24 +28,25 @@ namespace Atelie.Api.Services
             return lista;
         }
 
-        public async Task<IEnumerable<ListaTarefa>> ObterTodas()
+        public async Task<IEnumerable<ListaTarefa>> ObterTodas(Guid userId)
         {
             return await _context.ListasTarefa
+                .Where(lt => lt.UserId == userId)
                 .Include(lt => lt.Tarefas)
                 .OrderByDescending(lt => lt.DataCriacao)
                 .ToListAsync();
         }
 
-        public async Task<ListaTarefa?> ObterPorId(int id)
+        public async Task<ListaTarefa?> ObterPorId(Guid userId, int id)
         {
             return await _context.ListasTarefa
                 .Include(lt => lt.Tarefas)
-                .FirstOrDefaultAsync(lt => lt.Id == id);
+                .FirstOrDefaultAsync(lt => lt.Id == id && lt.UserId == userId);
         }
 
-        public async Task<Tarefa> AdicionarTarefa(int listaId, string descricao)
+        public async Task<Tarefa> AdicionarTarefa(Guid userId, int listaId, string descricao)
         {
-            var lista = await _context.ListasTarefa.FirstOrDefaultAsync(lt => lt.Id == listaId);
+            var lista = await _context.ListasTarefa.FirstOrDefaultAsync(lt => lt.Id == listaId && lt.UserId == userId);
             if (lista == null)
                 throw new ArgumentException("Lista não encontrada");
 
@@ -62,9 +64,9 @@ namespace Atelie.Api.Services
             return tarefa;
         }
 
-        public async Task<bool> ConcluirTarefa(int tarefaId)
+        public async Task<bool> ConcluirTarefa(Guid userId, int tarefaId)
         {
-            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId);
+            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId && t.ListaTarefa.UserId == userId);
             if (tarefa == null)
                 return false;
 
@@ -75,9 +77,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> DesmarcaTarefa(int tarefaId)
+        public async Task<bool> DesmarcaTarefa(Guid userId, int tarefaId)
         {
-            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId);
+            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId && t.ListaTarefa.UserId == userId);
             if (tarefa == null)
                 return false;
 
@@ -88,9 +90,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> AtualizarTarefa(int tarefaId, string novaDescricao)
+        public async Task<bool> AtualizarTarefa(Guid userId, int tarefaId, string novaDescricao)
         {
-            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId);
+            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId && t.ListaTarefa.UserId == userId);
             if (tarefa == null)
                 return false;
 
@@ -100,9 +102,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> DeletarTarefa(int tarefaId)
+        public async Task<bool> DeletarTarefa(Guid userId, int tarefaId)
         {
-            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId);
+            var tarefa = await _context.Tarefas.FirstOrDefaultAsync(t => t.Id == tarefaId && t.ListaTarefa.UserId == userId);
             if (tarefa == null)
                 return false;
 
@@ -111,9 +113,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> DeletarLista(int listaId)
+        public async Task<bool> DeletarLista(Guid userId, int listaId)
         {
-            var lista = await _context.ListasTarefa.FirstOrDefaultAsync(lt => lt.Id == listaId);
+            var lista = await _context.ListasTarefa.FirstOrDefaultAsync(lt => lt.Id == listaId && lt.UserId == userId);
             if (lista == null)
                 return false;
 

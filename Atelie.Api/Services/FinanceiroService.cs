@@ -18,12 +18,10 @@ namespace Atelie.Api.Services
             _context = context;
         }
 
-        #region Resumos
-
-        public async Task<ResumoMensalDto> ObterResumoMensal(int ano, int mes)
+        public async Task<ResumoMensalDto> ObterResumoMensal(Guid userId, int ano, int mes)
         {
             var movs = await _context.MovimentacoesFinanceiro
-                .Where(m => m.Data.Year == ano && m.Data.Month == mes)
+                .Where(m => m.Data.Year == ano && m.Data.Month == mes && m.UserId == userId)
                 .ToListAsync();
 
             return new ResumoMensalDto
@@ -41,10 +39,10 @@ namespace Atelie.Api.Services
             };
         }
 
-        public async Task<ResumoAnualDto> ObterResumoAnual(int ano)
+        public async Task<ResumoAnualDto> ObterResumoAnual(Guid userId, int ano)
         {
             var movs = await _context.MovimentacoesFinanceiro
-                .Where(m => m.Data.Year == ano)
+                .Where(m => m.Data.Year == ano && m.UserId == userId)
                 .ToListAsync();
 
             return new ResumoAnualDto
@@ -58,37 +56,28 @@ namespace Atelie.Api.Services
             };
         }
 
-        #endregion
-
-        #region CRUD
-
-        public async Task<List<MovimentacaoFinanceiro>> ObterMovimentacoesMensais(
-            int ano,
-            int mes,
-            int? tipo,
-            ContextoFinanceiro? contexto,
-            MeioPagamento? meioPagamento)
+        public async Task<List<MovimentacaoFinanceiro>> ObterMovimentacoesMensais(Guid userId, int ano, int mes)
         {
             var query = _context.MovimentacoesFinanceiro
-                .Where(m => m.Data.Year == ano && m.Data.Month == mes);
-
-            if (meioPagamento.HasValue)
-                query = query.Where(m => m.MeioPagamento == meioPagamento.Value);
-
-            if (tipo == 1)
-                query = query.Where(m => m.Valor > 0);
-            else if (tipo == 2)
-                query = query.Where(m => m.Valor < 0);
+                .Where(m => m.Data.Year == ano && m.Data.Month == mes && m.UserId == userId);
 
             return await query
                 .OrderByDescending(m => m.Data)
                 .ToListAsync();
         }
 
-        public async Task<bool> AtualizarMovimentacao(int id, MovimentacaoFinanceiro dto)
+        public async Task<bool> AdicionarMovimentacaoFinanceiro(Guid userId, MovimentacaoFinanceiro dto)
+        {
+            dto.UserId = userId;
+            _context.MovimentacoesFinanceiro.Add(dto);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        
+        public async Task<bool> AtualizarMovimentacao(Guid userId, int id, MovimentacaoFinanceiro dto)
         {
             var mov = await _context.MovimentacoesFinanceiro.FindAsync(id);
-            if (mov == null) return false;
+            if (mov == null || mov.UserId != userId) return false;
 
             mov.Descricao = CleanAndExtractName(dto.Descricao);
             mov.Valor = dto.Valor;
@@ -100,20 +89,17 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> ExcluirMovimentacao(int id)
+        public async Task<bool> ExcluirMovimentacao(Guid userId, int id)
         {
             var mov = await _context.MovimentacoesFinanceiro.FindAsync(id);
-            if (mov == null) return false;
+            if (mov == null || mov.UserId != userId) return false;
 
             _context.MovimentacoesFinanceiro.Remove(mov);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        #endregion
-
         #region Importação CSV
-
         public async Task<ImportResultDto> ImportarDadosCsv(string caminhoArquivo, int? ano = null, int? mes = null)
         {
             var result = new ImportResultDto();

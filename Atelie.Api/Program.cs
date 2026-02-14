@@ -18,6 +18,8 @@ builder.Services.AddScoped<PecaProntaService>();
 builder.Services.AddScoped<VendaService>();
 builder.Services.AddScoped<EncomendaService>();
 builder.Services.AddScoped<TodoListService>();
+builder.Services.AddScoped<AtelieService>();
+
 
 // DbContext + PostgreSQL (Supabase Pooler)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -80,6 +82,9 @@ app.UseCors("FrontendPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
+
+app.UseMiddleware<PlanoAtivoMiddleware>();
+
 app.MapControllers();
 
 app.Run();

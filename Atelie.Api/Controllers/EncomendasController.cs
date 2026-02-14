@@ -4,6 +4,7 @@ using Atelie.Api.Entities;
 using Atelie.Api.Enums;
 using Atelie.Api.Dtos;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Atelie.Api.Controllers
 {
@@ -18,13 +19,23 @@ namespace Atelie.Api.Controllers
             _service = service;
         }
 
+        private Guid ObterUsuarioId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return userId != null ? Guid.Parse(userId) : Guid.Empty;
+
+        }
+
         // POST: api/Encomendas
         [HttpPost]
         public async Task<IActionResult> CriarEncomenda([FromBody] EncomendaDto dto)
         {
+            var userId = ObterUsuarioId();
             try
             {
                 var encomenda = await _service.CriarEncomenda(
+                    userId,
                     dto.Descricao,
                     dto.ValorOrcado,
                     dto.Cliente,
@@ -40,13 +51,10 @@ namespace Atelie.Api.Controllers
 
         // GET: api/Encomendas
         [HttpGet]
-        public async Task<IActionResult> ObterEncomendas([FromQuery] int? status = null)
+        public async Task<IActionResult> ObterEncomendas()
         {
-            StatusEncomenda? statusEnum = null;
-            if (status.HasValue && Enum.IsDefined(typeof(StatusEncomenda), status.Value))
-                statusEnum = (StatusEncomenda)status.Value;
 
-            var encomendas = await _service.ObterEncomendas(statusEnum);
+            var encomendas = await _service.ObterEncomendas(ObterUsuarioId());
             return Ok(encomendas);
         }
 
@@ -54,7 +62,7 @@ namespace Atelie.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> ObterPorId(int id)
         {
-            var encomenda = await _service.ObterPorId(id);
+            var encomenda = await _service.ObterPorId(ObterUsuarioId(), id);
             if (encomenda == null)
                 return NotFound();
 
@@ -68,7 +76,7 @@ namespace Atelie.Api.Controllers
             if (!Enum.IsDefined(typeof(StatusEncomenda), novoStatus))
                 return BadRequest("Status inválido");
 
-            var sucesso = await _service.AtualizarStatus(id, (StatusEncomenda)novoStatus);
+            var sucesso = await _service.AtualizarStatus(ObterUsuarioId(), id, (StatusEncomenda)novoStatus);
             if (!sucesso)
                 return NotFound();
 
@@ -79,7 +87,7 @@ namespace Atelie.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deletar(int id)
         {
-            var sucesso = await _service.Deletar(id);
+            var sucesso = await _service.Deletar(ObterUsuarioId(), id);
             if (!sucesso)
                 return NotFound();
 

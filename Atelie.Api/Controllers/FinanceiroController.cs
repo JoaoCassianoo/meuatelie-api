@@ -8,6 +8,7 @@ using System.Text;
 using CsvHelper;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Atelie.Api.Controllers
 {
@@ -24,12 +25,24 @@ namespace Atelie.Api.Controllers
             _service = service;
         }
 
+        private Guid ObterUsuarioId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return userId != null ? Guid.Parse(userId) : Guid.Empty;
+
+        }
+
         // POST: api/Financeiro
         [HttpPost]
-        public async Task<IActionResult> AdicionarMovimentacaoFinanceiro(Entities.MovimentacaoFinanceiro movimentacao)
+        public async Task<IActionResult> AdicionarMovimentacaoFinanceiro(MovimentacaoFinanceiro movimentacao)
         {
-            _context.MovimentacoesFinanceiro.Add(movimentacao);
-            await _context.SaveChangesAsync();
+            var userId = ObterUsuarioId();
+            var ok = await _service.AdicionarMovimentacaoFinanceiro(userId, movimentacao);
+            if (!ok)
+            {
+                return BadRequest("Erro ao adicionar movimentação financeira.");
+            }
             return CreatedAtAction(
                 nameof(ObterMovimentacaoFinanceiraPorId), 
                 new { id = movimentacao.Id }, 
@@ -41,7 +54,8 @@ namespace Atelie.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult> ObterMovimentacaoFinanceiraPorId(int id)
         {
-            var movimentacao = await _context.MovimentacoesFinanceiro.FirstOrDefaultAsync(m => m.Id == id);
+            var userId = ObterUsuarioId();
+            var movimentacao = await _context.MovimentacoesFinanceiro.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
             if (movimentacao == null)
             {
                 return NotFound();
@@ -53,64 +67,34 @@ namespace Atelie.Api.Controllers
         [HttpGet("resumo/mensal")]
         public async Task<IActionResult> ObterResumoMensal([FromQuery] int ano, [FromQuery] int mes)
         {
-            var resumo = await _service.ObterResumoMensal(ano, mes);
+            var userId = ObterUsuarioId();
+            var resumo = await _service.ObterResumoMensal(userId, ano, mes);
             return Ok(resumo);
         }
-
 
         // GET: api/financeiro/resumo?ano=2025
         [HttpGet("resumo/anual")]
         public async Task<IActionResult> ObterResumoAnual([FromQuery] int ano)
         {
-            var resumo = await _service.ObterResumoAnual(ano);
+            var userId = ObterUsuarioId();
+            var resumo = await _service.ObterResumoAnual(userId, ano);
             return Ok(resumo);
         }
         
-
         // GET: api/financeiro/movimentacoes?ano=2025&mes=1
         [HttpGet("movimentacoes")]
-        public async Task<IActionResult> ObterMovimentacoes(
-            [FromQuery] int ano,
-            [FromQuery] int mes,
-            [FromQuery] int? tipo,
-            [FromQuery] int? contexto,
-            [FromQuery] int? meio)
+        public async Task<IActionResult> ObterMovimentacoes([FromQuery] int ano, [FromQuery] int mes)
         {
-            MeioPagamento? meioPagamento = new MeioPagamento?();
-            ContextoFinanceiro? contextoFinanceiro = new ContextoFinanceiro?();
-            if(meio == 3) {
-                meioPagamento = MeioPagamento.Pix;
-            }
-            else if(meio == 2) {
-                meioPagamento = MeioPagamento.CartaoDebito;
-            }
-            else if(meio == 1) {
-                meioPagamento = MeioPagamento.CartaoCredito;
-            }
-
-            if(contexto == 2) {
-                contextoFinanceiro = ContextoFinanceiro.Pessoal;
-            }
-            else if(contexto == 1) {
-                contextoFinanceiro = ContextoFinanceiro.Loja;
-            }
-                
-
-            var lista = await _service.ObterMovimentacoesMensais(
-                ano,
-                mes,
-                tipo,
-                contextoFinanceiro,
-                meioPagamento
-            );
-
+            var userId = ObterUsuarioId();
+            var lista = await _service.ObterMovimentacoesMensais(userId, ano, mes);
             return Ok(lista);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Atualizar(int id, MovimentacaoFinanceiro dto)
         {
-            var ok = await _service.AtualizarMovimentacao(id, dto);
+            var userId = ObterUsuarioId();
+            var ok = await _service.AtualizarMovimentacao(userId, id, dto);
 
             if (!ok)
                 return NotFound();
@@ -121,7 +105,8 @@ namespace Atelie.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Excluir(int id)
         {
-            var ok = await _service.ExcluirMovimentacao(id);
+            var userId = ObterUsuarioId();
+            var ok = await _service.ExcluirMovimentacao(userId, id);
 
             if (!ok)
                 return NotFound();

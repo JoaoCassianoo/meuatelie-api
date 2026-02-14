@@ -13,9 +13,9 @@ namespace Atelie.Api.Services
             _context = context;
         }
 
-        public async Task<Venda> RegistrarVenda(int pecaProntaId, decimal valorVenda, string? cliente = null, string? observacao = null)
+        public async Task<Venda> RegistrarVenda(Guid userId, int pecaProntaId, decimal valorVenda, string? cliente = null, string? observacao = null)
         {
-            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == pecaProntaId);
+            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == pecaProntaId && p.UserId == userId);
             if (pecaPronta == null)
                 throw new ArgumentException("Peça pronta não encontrada");
 
@@ -25,6 +25,7 @@ namespace Atelie.Api.Services
             // Registra venda
             var venda = new Venda
             {
+                UserId = userId,
                 PecaProntaId = pecaProntaId,
                 Quantidade = 1,
                 ValorVenda = valorVenda,
@@ -39,9 +40,10 @@ namespace Atelie.Api.Services
             return venda;
         }
 
-        public async Task<IEnumerable<Venda>> ObterVendas(int? pecaProntaId = null)
+        public async Task<IEnumerable<Venda>> ObterVendas(Guid userId, int? pecaProntaId = null)
         {
             var query = _context.Vendas
+                .Where(v => v.PecaPronta.UserId == userId)
                 .Include(v => v.PecaPronta)
                 .AsQueryable();
 
@@ -50,32 +52,10 @@ namespace Atelie.Api.Services
 
             return await query.OrderByDescending(v => v.Data).ToListAsync();
         }
-
-        public async Task<IEnumerable<Venda>> ObterVendasPorPeriodo(DateTime dataInicio, DateTime dataFim)
+        
+        public async Task<bool> Deletar(Guid userId, int vendaId)
         {
-            return await _context.Vendas
-                .Include(v => v.PecaPronta)
-                .Where(v => v.Data >= dataInicio && v.Data <= dataFim)
-                .OrderByDescending(v => v.Data)
-                .ToListAsync();
-        }
-
-        public async Task<decimal> ObterTotalVendas(DateTime? dataInicio = null, DateTime? dataFim = null)
-        {
-            var query = _context.Vendas.AsQueryable();
-
-            if (dataInicio.HasValue)
-                query = query.Where(v => v.Data >= dataInicio.Value);
-
-            if (dataFim.HasValue)
-                query = query.Where(v => v.Data <= dataFim.Value);
-
-            return await query.SumAsync(v => v.ValorVenda);
-        }
-
-        public async Task<bool> Deletar(int vendaId)
-        {
-            var venda = await _context.Vendas.FirstOrDefaultAsync(v => v.Id == vendaId);
+            var venda = await _context.Vendas.FirstOrDefaultAsync(v => v.Id == vendaId && v.UserId == userId);
             if (venda == null)
                 return false;
 

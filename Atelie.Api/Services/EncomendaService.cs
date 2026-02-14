@@ -14,10 +14,26 @@ namespace Atelie.Api.Services
             _context = context;
         }
 
-        public async Task<Encomenda> CriarEncomenda(string descricao, decimal valorOrcado, string? cliente = null, string? observacao = null)
+        public async Task<IEnumerable<Encomenda>> ObterEncomendas( Guid userId)
+        {
+            var query = _context.Encomendas
+                .Where(e => e.UserId == userId)
+                .OrderByDescending(e => e.Data);
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<Encomenda?> ObterPorId(Guid userId, int id)
+        {
+            return await _context.Encomendas
+                .FirstOrDefaultAsync(e => e.Id == id && e.UserId == userId);
+        }
+
+        public async Task<Encomenda> CriarEncomenda(Guid userId, string descricao, decimal valorOrcado, string? cliente = null, string? observacao = null)
         {
             var encomenda = new Encomenda
             {
+                UserId = userId,
                 Descricao = descricao,
                 Status = StatusEncomenda.Pendente,
                 ValorOrcado = valorOrcado,
@@ -32,24 +48,9 @@ namespace Atelie.Api.Services
             return encomenda;
         }
 
-        public async Task<IEnumerable<Encomenda>> ObterEncomendas(StatusEncomenda? status = null)
+        public async Task<bool> AtualizarStatus(Guid userId, int encomendaId, StatusEncomenda novoStatus)
         {
-            var query = _context.Encomendas
-                .Where(e => !status.HasValue || e.Status == status.Value)
-                .OrderByDescending(e => e.Data);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<Encomenda?> ObterPorId(int id)
-        {
-            return await _context.Encomendas
-                .FirstOrDefaultAsync(e => e.Id == id);
-        }
-
-        public async Task<bool> AtualizarStatus(int encomendaId, StatusEncomenda novoStatus)
-        {
-            var encomenda = await _context.Encomendas.FirstOrDefaultAsync(e => e.Id == encomendaId);
+            var encomenda = await _context.Encomendas.FirstOrDefaultAsync(e => e.Id == encomendaId && e.UserId == userId);
             if (encomenda == null)
                 return false;
 
@@ -64,9 +65,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> Deletar(int encomendaId)
+        public async Task<bool> Deletar(Guid userId, int encomendaId)
         {
-            var encomenda = await _context.Encomendas.FirstOrDefaultAsync(e => e.Id == encomendaId);
+            var encomenda = await _context.Encomendas.FirstOrDefaultAsync(e => e.Id == encomendaId && e.UserId == userId);
             if (encomenda == null)
                 return false;
 

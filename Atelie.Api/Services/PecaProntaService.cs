@@ -14,10 +14,11 @@ namespace Atelie.Api.Services
             _context = context;
         }
 
-        public async Task<PecaPronta> CriarPecaPronta(string titulo, decimal valor, string? descricao = null, TipoPecaPronta tipo = TipoPecaPronta.JaExistente, string? fotoUrl = null)
+        public async Task<PecaPronta> CriarPecaPronta(Guid userId, string titulo, decimal valor, string? descricao = null, TipoPecaPronta tipo = TipoPecaPronta.Produzida, string? fotoUrl = null)
         {
             var pecaPronta = new PecaPronta
             {
+                UserId = userId,
                 Titulo = titulo,
                 Valor = valor,
                 Descricao = descricao,
@@ -33,46 +34,27 @@ namespace Atelie.Api.Services
             return pecaPronta;
         }
 
-        public async Task<IEnumerable<PecaPronta>> ObterTodas()
+        public async Task<IEnumerable<PecaPronta>> ObterTodas(Guid userId)
         {
             return await _context.PecasProntas
                 .Include(p => p.Materiais)
                 .ThenInclude(pm => pm.Material)
+                .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.DataCriacao)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<PecaPronta>> ObterPecasNaoVendidas()
+        public async Task<PecaPronta?> ObterPorId(Guid userId, int id)
         {
             return await _context.PecasProntas
                 .Include(p => p.Materiais)
                 .ThenInclude(pm => pm.Material)
-                .Where(p => !p.Vendida)
-                .OrderByDescending(p => p.DataCriacao)
-                .ToListAsync();
+                .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         }
 
-        public async Task<IEnumerable<PecaPronta>> ObterPorTipo(TipoPecaPronta tipo)
+        public async Task<bool> Atualizar(Guid userId, int id, string titulo, decimal valor, string? descricao = null, string? fotoUrl = null, TipoPecaPronta? tipo = null, bool? vendida = null)
         {
-            return await _context.PecasProntas
-                .Include(p => p.Materiais)
-                .ThenInclude(pm => pm.Material)
-                .Where(p => p.Tipo == tipo)
-                .OrderByDescending(p => p.DataCriacao)
-                .ToListAsync();
-        }
-
-        public async Task<PecaPronta?> ObterPorId(int id)
-        {
-            return await _context.PecasProntas
-                .Include(p => p.Materiais)
-                .ThenInclude(pm => pm.Material)
-                .FirstOrDefaultAsync(p => p.Id == id);
-        }
-
-        public async Task<bool> Atualizar(int id, string titulo, decimal valor, string? descricao = null, string? fotoUrl = null, TipoPecaPronta? tipo = null, bool? vendida = null)
-        {
-            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id);
+            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
             if (pecaPronta == null)
                 return false;
 
@@ -88,9 +70,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> MarcarComoVendida(int id)
+        public async Task<bool> MarcarComoVendida(Guid userId, int id)
         {
-            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id);
+            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
             if (pecaPronta == null)
                 return false;
 
@@ -101,10 +83,10 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> AdicionarMaterial(int pecaProntaId, int materialId, int quantidadeUsada)
+        public async Task<bool> AdicionarMaterial(Guid userId, int pecaProntaId, int materialId, int quantidadeUsada)
         {
-            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == pecaProntaId);
-            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == materialId);
+            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == pecaProntaId && p.UserId == userId);
+            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == materialId && m.UserId == userId);
 
             if (pecaPronta == null || material == null)
                 return false;
@@ -129,11 +111,11 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> RemoverMaterial(int pecaProntaId, int materialId)
+        public async Task<bool> RemoverMaterial(Guid userId, int pecaProntaId, int materialId)
         {
             var pecaProntaMaterial = await _context.PecaProntaMateriais
                 .Include(p => p.PecaPronta)
-                .FirstOrDefaultAsync(pm => pm.PecaProntaId == pecaProntaId && pm.MaterialId == materialId);
+                .FirstOrDefaultAsync(pm => pm.PecaProntaId == pecaProntaId && pm.MaterialId == materialId && pm.PecaPronta.UserId == userId);
 
             if (pecaProntaMaterial == null)
                 return false;
@@ -141,7 +123,7 @@ namespace Atelie.Api.Services
             // Devolve a quantidade do material (se for peça a produzir)
             if (pecaProntaMaterial.PecaPronta.Tipo == TipoPecaPronta.Produzida)
             {
-                var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == materialId);
+                var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == materialId && m.UserId == userId);
                 if (material != null)
                 {
                     material.Quantidade += pecaProntaMaterial.QuantidadeUsada;
@@ -154,9 +136,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> Deletar(int id)
+        public async Task<bool> Deletar(Guid userId, int id)
         {
-            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id);
+            var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
             if (pecaPronta == null)
                 return false;
 
@@ -169,7 +151,7 @@ namespace Atelie.Api.Services
 
                 foreach (var pm in materiais)
                 {
-                    var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == pm.MaterialId);
+                    var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == pm.MaterialId && m.UserId == userId);
                     if (material != null)
                     {
                         material.Quantidade += pm.QuantidadeUsada;

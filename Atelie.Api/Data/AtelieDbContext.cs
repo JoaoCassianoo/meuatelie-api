@@ -28,9 +28,16 @@ namespace Atelie.Api.Data
         // Financeiro
         public DbSet<MovimentacaoFinanceiro> MovimentacoesFinanceiro { get; set; } 
 
+        // Atelie
+        public DbSet<AtelieInfo> AtelieInfo { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+             modelBuilder.Entity<AtelieInfo>()
+                .HasIndex(a => a.UserId)
+                .IsUnique(); // 1 atelie por user
 
             // === Conversions de enums para string ===
             modelBuilder.Entity<Material>()

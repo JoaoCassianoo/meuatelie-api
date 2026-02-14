@@ -3,6 +3,7 @@ using Atelie.Api.Services;
 using Atelie.Api.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Atelie.Api.Controllers
 {
@@ -17,13 +18,21 @@ namespace Atelie.Api.Controllers
             _service = service;
         }
 
+        private Guid ObterUsuarioId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return userId != null ? Guid.Parse(userId) : Guid.Empty;
+
+        }
+
         // POST: api/Estoque/entrada
         [HttpPost("entrada")]
         public async Task<IActionResult> RegistrarEntrada([FromBody] MovimentacaoEstoqueDto dto)
         {
             try
             {
-                var movimentacao = await _service.RegistrarEntrada(dto.MaterialId, dto.Quantidade, dto.Observacao);
+                var movimentacao = await _service.RegistrarEntrada(ObterUsuarioId(), dto.MaterialId, dto.Quantidade, dto.Observacao);
                 return CreatedAtAction(nameof(ObterMovimentacoes), movimentacao);
             }
             catch (ArgumentException ex)
@@ -38,7 +47,7 @@ namespace Atelie.Api.Controllers
         {
             try
             {
-                var movimentacao = await _service.RegistrarSaida(dto.MaterialId, dto.Quantidade, dto.Observacao);
+                var movimentacao = await _service.RegistrarSaida(ObterUsuarioId(), dto.MaterialId, dto.Quantidade, dto.Observacao);
                 return CreatedAtAction(nameof(ObterMovimentacoes), movimentacao);
             }
             catch (ArgumentException ex)
@@ -55,17 +64,10 @@ namespace Atelie.Api.Controllers
         [HttpGet("movimentacoes")]
         public async Task<IActionResult> ObterMovimentacoes([FromQuery] int? materialId = null)
         {
-            var movimentacoes = await _service.ObterMovimentacoes(materialId);
+            var userId = ObterUsuarioId();
+            var movimentacoes = await _service.ObterMovimentacoes(userId, materialId);
             return Ok(movimentacoes);
         }
         
-
-        // GET: api/Estoque/movimentacoes/periodo?dataInicio=2026-01-01&dataFim=2026-01-31
-        [HttpGet("movimentacoes/periodo")]
-        public async Task<IActionResult> ObterMovimentacoesPorPeriodo([FromQuery] DateTime dataInicio, [FromQuery] DateTime dataFim)
-        {
-            var movimentacoes = await _service.ObterMovimentacoesPorPeriodo(dataInicio, dataFim);
-            return Ok(movimentacoes);
-        }
     }
 }

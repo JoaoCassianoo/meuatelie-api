@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Atelie.Api.Services;
 using Atelie.Api.Dtos;
+using System.Security.Claims;
 
 namespace Atelie.Api.Controllers
 {
@@ -15,11 +16,20 @@ namespace Atelie.Api.Controllers
             _service = service;
         }
 
+        private Guid ObterUsuarioId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return userId != null ? Guid.Parse(userId) : Guid.Empty;
+
+        }
+
         // POST: api/TodoList
         [HttpPost]
         public async Task<IActionResult> CriarLista([FromBody] CriarListaDto dto)
         {
-            var lista = await _service.CriarLista(dto.Titulo);
+            var userId = ObterUsuarioId();
+            var lista = await _service.CriarLista(userId, dto.Titulo);
             return CreatedAtAction(nameof(ObterPorId), new { id = lista.Id }, lista);
         }
 
@@ -27,7 +37,8 @@ namespace Atelie.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> ObterTodas()
         {
-            var listas = await _service.ObterTodas();
+            var userId = ObterUsuarioId();
+            var listas = await _service.ObterTodas(userId);
             return Ok(listas);
         }
 
@@ -35,7 +46,8 @@ namespace Atelie.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> ObterPorId(int id)
         {
-            var lista = await _service.ObterPorId(id);
+            var userId = ObterUsuarioId();
+            var lista = await _service.ObterPorId(userId, id);
             if (lista == null)
                 return NotFound();
 
@@ -48,7 +60,8 @@ namespace Atelie.Api.Controllers
         {
             try
             {
-                var tarefa = await _service.AdicionarTarefa(listaId, dto.Descricao);
+                var userId = ObterUsuarioId();
+                var tarefa = await _service.AdicionarTarefa(userId, listaId, dto.Descricao);
                 return CreatedAtAction(nameof(ObterPorId), new { id = listaId }, tarefa);
             }
             catch (ArgumentException ex)
@@ -61,7 +74,8 @@ namespace Atelie.Api.Controllers
         [HttpPatch("tarefas/{tarefaId}/concluir")]
         public async Task<IActionResult> ConcluirTarefa(int tarefaId)
         {
-            var sucesso = await _service.ConcluirTarefa(tarefaId);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.ConcluirTarefa(userId, tarefaId);
             if (!sucesso)
                 return NotFound();
 
@@ -72,7 +86,8 @@ namespace Atelie.Api.Controllers
         [HttpPatch("tarefas/{tarefaId}/desmarcar")]
         public async Task<IActionResult> DesmarcaTarefa(int tarefaId)
         {
-            var sucesso = await _service.DesmarcaTarefa(tarefaId);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.DesmarcaTarefa(userId, tarefaId);
             if (!sucesso)
                 return NotFound();
 
@@ -83,7 +98,8 @@ namespace Atelie.Api.Controllers
         [HttpPut("tarefas/{tarefaId}")]
         public async Task<IActionResult> AtualizarTarefa(int tarefaId, [FromBody] AtualizarTarefaDto dto)
         {
-            var sucesso = await _service.AtualizarTarefa(tarefaId, dto.Descricao);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.AtualizarTarefa(userId, tarefaId, dto.Descricao);
             if (!sucesso)
                 return NotFound();
 
@@ -94,7 +110,8 @@ namespace Atelie.Api.Controllers
         [HttpDelete("tarefas/{tarefaId}")]
         public async Task<IActionResult> DeletarTarefa(int tarefaId)
         {
-            var sucesso = await _service.DeletarTarefa(tarefaId);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.DeletarTarefa(userId, tarefaId);
             if (!sucesso)
                 return NotFound();
 
@@ -105,7 +122,8 @@ namespace Atelie.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletarLista(int id)
         {
-            var sucesso = await _service.DeletarLista(id);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.DeletarLista(userId, id);
             if (!sucesso)
                 return NotFound();
 

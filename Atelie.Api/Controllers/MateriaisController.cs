@@ -26,24 +26,22 @@ namespace Atelie.Api.Controllers
 
         }
 
-
-
         [HttpGet]
         public async Task<IActionResult> ObterTodos()
         {
             var userId = ObterUsuarioId();
 
-            var resultado = await _service.ObterPaginado(userId);
+            var resultado = await _service.Obter(userId);
 
             return Ok(resultado);
         }
-
 
         // GET: api/Materiais
         [HttpGet("resumo")]
         public async Task<IActionResult> ObterResumoEstoque()
         {
-            var resumo = await _service.ObterResumoEstoque();
+            var userId = ObterUsuarioId();
+            var resumo = await _service.ObterResumoEstoque(userId);
             return Ok(resumo);
         }
 
@@ -51,22 +49,12 @@ namespace Atelie.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> ObterPorId(int id)
         {
-            var material = await _service.ObterPorId(id);
+            var userId = ObterUsuarioId();
+            var material = await _service.ObterPorId(userId, id);
             if (material == null)
                 return NotFound();
 
             return Ok(material);
-        }
-
-        // GET: api/Materiais/categoria/1
-        [HttpGet("categoria/{categoria}")]
-        public async Task<IActionResult> ObterPorCategoria(int categoria)
-        {
-            if (!Enum.IsDefined(typeof(CategoriaMaterial), categoria))
-                return BadRequest("Categoria inválida");
-
-            var materiais = await _service.ObterPorCategoria((CategoriaMaterial)categoria);
-            return Ok(materiais);
         }
 
         [HttpPost]
@@ -74,20 +62,21 @@ namespace Atelie.Api.Controllers
         {
             material.UserId = ObterUsuarioId();
 
-            var resultado = await _service.Criar(material);
+            var resultado = await _service.Criar(ObterUsuarioId(), material);
 
             return CreatedAtAction(nameof(ObterPorId), new { id = resultado.Id }, resultado);
         }
-
 
         // PUT: api/Materiais/5
         [HttpPut("{id}")]
         public async Task<IActionResult> Atualizar(int id, [FromBody] Material material)
         {
+            var userId = ObterUsuarioId();
+            material.UserId = userId;
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var sucesso = await _service.Atualizar(id, material);
+            var sucesso = await _service.Atualizar(userId, id, material);
             if (!sucesso)
                 return NotFound();
 
@@ -98,7 +87,8 @@ namespace Atelie.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deletar(int id)
         {
-            var sucesso = await _service.Deletar(id);
+            var userId = ObterUsuarioId();
+            var sucesso = await _service.Deletar(userId, id);
             if (!sucesso)
                 return NotFound();
 

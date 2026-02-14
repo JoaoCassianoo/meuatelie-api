@@ -16,7 +16,7 @@ namespace Atelie.Api.Services
         }
 
         
-        public async Task<object> ObterPaginado(Guid userId)
+        public async Task<object> Obter(Guid userId)
         {
             var query = _context.Materiais
                 .AsNoTracking()
@@ -27,39 +27,41 @@ namespace Atelie.Api.Services
             var dados = await query
                 .OrderBy(m => m.Id)
                 .AsNoTracking()
+                .Select(m => new MaterialDto
+                {
+                    Id = m.Id,
+                    AtelieId = m.AtelieId,
+                    Nome = m.Nome,
+                    Categoria = m.Categoria,
+                    Tamanho = m.Tamanho,
+                    Quantidade = m.Quantidade,
+                    Valor = m.Valor
+                })
                 .ToListAsync();
 
             return dados;
         }
 
-
-        public async Task<IEnumerable<Material>> ObterTodos()
+        public async Task<Material?> ObterPorId(Guid userId, int id)
         {
-            return await _context.Materiais.ToListAsync();
+            return await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
         }
 
-        public async Task<Material?> ObterPorId(int id)
+        public async Task<Material> Criar(Guid userId, Material material)
         {
-            return await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id);
-        }
-
-        public async Task<IEnumerable<Material>> ObterPorCategoria(CategoriaMaterial categoria)
-        {
-            return await _context.Materiais
-                .Where(m => m.Categoria == categoria)
-                .ToListAsync();
-        }
-
-        public async Task<Material> Criar(Material material)
-        {
+            material.UserId = userId;
+            var ultimoId = await _context.Materiais
+                .Where(m => m.UserId == userId)
+                .MaxAsync(m => (int?)m.AtelieId) ?? 0;
+            material.AtelieId = ultimoId + 1;
             _context.Materiais.Add(material);
             await _context.SaveChangesAsync();
             return material;
         }
 
-        public async Task<bool> Atualizar(int id, Material materialAtualizado)
+        public async Task<bool> Atualizar(Guid userId, int id, Material materialAtualizado)
         {
-            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id);
+            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
             if (material == null)
                 return false;
 
@@ -74,9 +76,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> AjustarQuantidade(int id, int quantidade, TipoMovimentacaoEstoque tipo)
+        public async Task<bool> AjustarQuantidade(Guid userId, int id, int quantidade, TipoMovimentacaoEstoque tipo)
         {
-            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id);
+            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
             if (material == null)
                 return false;
 
@@ -96,9 +98,9 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<bool> Deletar(int id)
+        public async Task<bool> Deletar(Guid userId, int id)
         {
-            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id);
+            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
             if (material == null)
                 return false;
 
@@ -107,20 +109,23 @@ namespace Atelie.Api.Services
             return true;
         }
 
-        public async Task<int> ObterQuantidadeEmEstoque(int materialId)
+        public async Task<int> ObterQuantidadeEmEstoque(Guid userId, int materialId)
         {
-            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == materialId);
+            var material = await _context.Materiais.FirstOrDefaultAsync(m => m.Id == materialId && m.UserId == userId);
             return material?.Quantidade ?? 0;
         }
 
-        public async Task<Dtos.ResumoEstoqueDto> ObterResumoEstoque()
+        public async Task<ResumoEstoqueDto> ObterResumoEstoque(Guid userId)
         {
-            var materiais = await _context.Materiais.ToListAsync();
+
+            var materiais = await _context.Materiais
+                .Where(m => m.UserId == userId)
+                .ToListAsync();
 
             var quantidadeTotalPecas = materiais.Sum(m => m.Quantidade);
             var valorTotalEstoque = materiais.Sum(m => m.Valor * m.Quantidade);
 
-            return new Dtos.ResumoEstoqueDto
+            return new ResumoEstoqueDto
             {
                 QuantidadeTotalPecas = quantidadeTotalPecas,
                 ValorTotalEstoque = valorTotalEstoque

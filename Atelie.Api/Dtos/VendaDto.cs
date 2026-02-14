@@ -6,5 +6,6 @@ namespace Atelie.Api.Dtos
         public decimal ValorVenda { get; set; }
         public string? Cliente { get; set; }
         public string? Observacao { get; set; }
+        public DateTime Data { get; set; } 
     }
 }
