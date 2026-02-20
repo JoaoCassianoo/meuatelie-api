@@ -37,8 +37,7 @@ namespace Atelie.Api.Controllers
                 request.Titulo,
                 request.Valor,
                 request.Descricao,
-                request.Tipo,
-                request.FotoUrl
+                request.Tipo
             );
 
             return CreatedAtAction(nameof(ObterPorId), new { id = pecaPronta.Id }, pecaPronta);
@@ -73,7 +72,7 @@ namespace Atelie.Api.Controllers
                 return BadRequest("Título da peça é obrigatório");
 
             var userId = ObterUsuarioId();
-            var sucesso = await _service.Atualizar(userId, id, request.Titulo, request.Valor, request.Descricao, request.FotoUrl, request.Tipo, request.Vendida);
+            var sucesso = await _service.Atualizar(userId, id, request.Titulo, request.Valor, request.Descricao, request.Tipo, request.Vendida);
             if (!sucesso)
                 return NotFound();
 
@@ -138,7 +137,6 @@ namespace Atelie.Api.Controllers
         public decimal Valor { get; set; }
         public string? Descricao { get; set; }  // Tamanho/detalhes
         public TipoPecaPronta Tipo { get; set; }
-        public string? FotoUrl { get; set; }
     }
 
     public class AtualizarPecaProntaRequest
@@ -146,7 +144,6 @@ namespace Atelie.Api.Controllers
         public string Titulo { get; set; } = string.Empty;
         public decimal Valor { get; set; }
         public string? Descricao { get; set; }
-        public string? FotoUrl { get; set; }
 
         public TipoPecaPronta Tipo { get; set; }
 

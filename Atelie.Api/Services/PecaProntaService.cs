@@ -14,7 +14,7 @@ namespace Atelie.Api.Services
             _context = context;
         }
 
-        public async Task<PecaPronta> CriarPecaPronta(Guid userId, string titulo, decimal valor, string? descricao = null, TipoPecaPronta tipo = TipoPecaPronta.Produzida, string? fotoUrl = null)
+        public async Task<PecaPronta> CriarPecaPronta(Guid userId, string titulo, decimal valor, string? descricao = null, TipoPecaPronta tipo = TipoPecaPronta.Produzida)
         {
             var pecaPronta = new PecaPronta
             {
@@ -23,7 +23,6 @@ namespace Atelie.Api.Services
                 Valor = valor,
                 Descricao = descricao,
                 Tipo = tipo,
-                FotoUrl = fotoUrl,
                 Vendida = false,
                 DataCriacao = DateTime.UtcNow
             };
@@ -52,7 +51,7 @@ namespace Atelie.Api.Services
                 .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
         }
 
-        public async Task<bool> Atualizar(Guid userId, int id, string titulo, decimal valor, string? descricao = null, string? fotoUrl = null, TipoPecaPronta? tipo = null, bool? vendida = null)
+        public async Task<bool> Atualizar(Guid userId, int id, string titulo, decimal valor, string? descricao = null, TipoPecaPronta? tipo = null, bool? vendida = null)
         {
             var pecaPronta = await _context.PecasProntas.FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
             if (pecaPronta == null)
@@ -62,7 +61,6 @@ namespace Atelie.Api.Services
             pecaPronta.Valor = valor;
             pecaPronta.Descricao = descricao;
             pecaPronta.Tipo = (TipoPecaPronta)tipo;
-            pecaPronta.FotoUrl = fotoUrl;
             pecaPronta.Vendida = (bool)vendida;
 
             _context.PecasProntas.Update(pecaPronta);

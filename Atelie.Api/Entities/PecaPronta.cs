@@ -9,7 +9,6 @@ namespace Atelie.Api.Entities
         public string Titulo { get; set; } = string.Empty;
         public string? Descricao { get; set; }  // Tamanho/detalhes
         public decimal Valor { get; set; }
-        public string? FotoUrl { get; set; }
         public TipoPecaPronta Tipo { get; set; }
         public bool Vendida { get; set; } = false;
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
