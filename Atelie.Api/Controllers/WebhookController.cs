@@ -23,23 +23,9 @@ namespace Atelie.Api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Receber(
             [FromQuery] string webhookSecret,
-            [FromBody] WebhookPayload payload)
+            [FromBody] System.Text.Json.JsonElement payload)
         {
-            if (webhookSecret != _config["AbacatePay:WebhookSecret"])
-                return Unauthorized();
-
-            Console.WriteLine(payload.Data.Billing.ExternalId);
-
-            if (payload.Event == "billing.paid")
-            {
-                var userId = payload.Data.Billing.ExternalId;
-                var billingId = payload.Data.Billing.Id;
-                var externalIdProduto = payload.Data.Billing.Products
-                    .FirstOrDefault()?.ExternalId ?? "pro-mensal";
-
-                await _assinaturaService.AtivarAcesso(userId, billingId, externalIdProduto);
-            }
-
+            Console.WriteLine(payload.ToString());
             return Ok();
         }
     }
