@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Atelie.Api.Services;
 using Atelie.Api.Dtos;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class VendasController : ControllerBase
     {
         private readonly VendaService _service;

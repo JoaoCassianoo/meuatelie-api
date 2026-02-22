@@ -3,11 +3,13 @@ using Atelie.Api.Services;
 using Atelie.Api.Entities;
 using Atelie.Api.Enums;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PecasProntasController : ControllerBase
     {
         private readonly PecaProntaService _service;

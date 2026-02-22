@@ -9,6 +9,7 @@ namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MateriaisController : ControllerBase
     {
         private readonly MaterialService _service;

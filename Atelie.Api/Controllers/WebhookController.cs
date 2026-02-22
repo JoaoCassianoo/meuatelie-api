@@ -7,7 +7,7 @@ namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/webhook")]
-    [AllowAnonymous]
+    [Authorize]
     public class WebhookController : ControllerBase
     {
         private readonly AssinaturaService _assinaturaService;
@@ -20,6 +20,7 @@ namespace Atelie.Api.Controllers
         }
 
         [HttpPost("pagamento")]
+        [AllowAnonymous]
         public async Task<IActionResult> Receber(
             [FromQuery] string secret,
             [FromBody] WebhookPayload payload)

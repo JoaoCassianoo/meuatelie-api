@@ -86,6 +86,7 @@ namespace Atelie.Api.Services
 
             var response = await _http.PostAsJsonAsync($"{BaseUrl}/billing/create", payload);
 
+
             // troca o EnsureSuccessStatusCode por isso para ver o erro real
             if (!response.IsSuccessStatusCode)
             {
@@ -95,7 +96,7 @@ namespace Atelie.Api.Services
 
             var result = await response.Content
                 .ReadFromJsonAsync<AbacateApiResponse<BillingData>>();
-
+                
             return (result!.Data.Id, result.Data.Url);;
         }
     }

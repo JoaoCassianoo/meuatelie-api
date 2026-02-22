@@ -10,6 +10,7 @@ namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class EncomendasController : ControllerBase
     {
         private readonly EncomendaService _service;

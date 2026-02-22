@@ -8,6 +8,7 @@ namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/assinatura")]
+    [Authorize]
     public class AssinaturaController : ControllerBase
     {
         private readonly AssinaturaService _assinaturaService;
