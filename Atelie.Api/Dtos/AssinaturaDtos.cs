@@ -31,7 +31,7 @@ namespace Atelie.Api.Dtos
     public class WebhookBilling
     {
         public string Id { get; set; }
-        public string ExternalId { get; set; }
+        public string Status { get; set; }
         public List<WebhookProduct> Products { get; set; }
     }
 

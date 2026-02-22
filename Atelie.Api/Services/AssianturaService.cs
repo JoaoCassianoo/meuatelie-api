@@ -45,10 +45,11 @@ namespace Atelie.Api.Services
             return (true, null, billingUrl);
         }
 
-        public async Task<bool> AtivarAcesso(string userId, string billingId, string externalIdProduto)
+        public async Task<bool> AtivarAcesso(string billingId, string externalIdProduto)
         {
+            // busca o ateliê pelo BillingId que foi salvo na criação da cobrança
             var atelie = await _context.AtelieInfo
-                .FirstOrDefaultAsync(a => a.UserId == Guid.Parse(userId));
+                .FirstOrDefaultAsync(a => a.BillingId == billingId);
 
             if (atelie == null)
                 return false;
@@ -63,7 +64,6 @@ namespace Atelie.Api.Services
             atelie.Status = "ativo";
             atelie.Plano = "Pro";
             atelie.DataVencimento = DateTime.UtcNow.AddDays(diasDeAcesso);
-            atelie.BillingId = billingId;
 
             await _context.SaveChangesAsync();
 
