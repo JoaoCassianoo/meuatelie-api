@@ -17,6 +17,20 @@ public class AtelieController : ControllerBase
     private Guid UserId =>
         Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+    [HttpPost("registrar")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Registrar(RegistroAtelieDto dto)
+    {
+        try
+        {
+            var atelie = await _service.Registrar(dto);
+            return CreatedAtAction(nameof(Get), new { id = atelie.Id }, atelie);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { erro = ex.Message });
+        }
+    }
 
     [HttpGet]
     public async Task<IActionResult> Get()

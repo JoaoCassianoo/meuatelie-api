@@ -20,4 +20,10 @@ public class AtelieInfo
     public DateTime? DataVencimento { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+     // ID da cobrança gerada na AbacatePay
+    public string? BillingId { get; set; }
+
+    // Link para o cliente pagar o PIX
+    public string? BillingUrl { get; set; }
 }

@@ -19,6 +19,11 @@ builder.Services.AddScoped<VendaService>();
 builder.Services.AddScoped<EncomendaService>();
 builder.Services.AddScoped<TodoListService>();
 builder.Services.AddScoped<AtelieService>();
+builder.Services.AddHttpClient<AbacatePayService>();
+builder.Services.AddScoped<AssinaturaService>();
+
+// HttpClient para Supabase
+builder.Services.AddHttpClient();
 
 
 // DbContext + PostgreSQL (Supabase Pooler)
