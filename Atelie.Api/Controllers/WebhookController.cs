@@ -1,11 +1,13 @@
 using Atelie.Api.Dtos;
 using Atelie.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/webhook")]
+    [AllowAnonymous]
     public class WebhookController : ControllerBase
     {
         private readonly AssinaturaService _assinaturaService;
