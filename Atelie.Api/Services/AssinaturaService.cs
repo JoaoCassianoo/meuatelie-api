@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Atelie.Api.Data;
-using Atelie.Api.Entities;
 
 namespace Atelie.Api.Services
 {
@@ -30,11 +29,12 @@ namespace Atelie.Api.Services
                 return (false, "Você já tem uma assinatura ativa.", null);
 
             var (billingId, billingUrl) = await _abacateService.CriarCobrancaAsync(
-                userId: userId.ToString(),
-                nomeDono: atelie.NomeDono,
-                email: email,
-                nomeAtelie: atelie.NomeAtelie,
-                periocidade: periodicidade
+                userId,
+                atelie.NomeDono,
+                email,           // vem do JWT
+                atelie.Telefone,
+                atelie.CpfCnpj,
+                periodicidade
             );
 
             atelie.BillingId = billingId;
@@ -47,7 +47,6 @@ namespace Atelie.Api.Services
 
         public async Task<bool> AtivarAcesso(string billingId, string externalIdProduto)
         {
-            // busca o ateliê pelo BillingId que foi salvo na criação da cobrança
             var atelie = await _context.AtelieInfo
                 .FirstOrDefaultAsync(a => a.BillingId == billingId);
 

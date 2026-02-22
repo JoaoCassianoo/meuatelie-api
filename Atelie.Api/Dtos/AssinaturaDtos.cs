@@ -7,36 +7,36 @@ namespace Atelie.Api.Dtos
 
     public class AbacateApiResponse<T>
     {
-        public T Data { get; set; }
+        public T Data { get; set; } = default!;
         public string? Error { get; set; }
     }
 
     public class BillingData
     {
-        public string Id { get; set; }
-        public string Url { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string Url { get; set; } = string.Empty;
     }
 
     public class WebhookPayload
     {
-        public string Event { get; set; }
-        public WebhookData Data { get; set; }
+        public string Event { get; set; } = string.Empty;
+        public WebhookData Data { get; set; } = new();
     }
 
     public class WebhookData
     {
-        public WebhookBilling Billing { get; set; }
+        public WebhookBilling Billing { get; set; } = new();
     }
 
     public class WebhookBilling
     {
-        public string Id { get; set; }
-        public string Status { get; set; }
-        public List<WebhookProduct> Products { get; set; }
+        public string Id { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public List<WebhookProduct> Products { get; set; } = new();
     }
 
     public class WebhookProduct
     {
-        public string ExternalId { get; set; }
+        public string ExternalId { get; set; } = string.Empty;
     }
 }

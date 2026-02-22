@@ -8,7 +8,6 @@ namespace Atelie.Api.Controllers
 {
     [ApiController]
     [Route("api/assinatura")]
-    [Authorize]
     public class AssinaturaController : ControllerBase
     {
         private readonly AssinaturaService _assinaturaService;
@@ -26,7 +25,11 @@ namespace Atelie.Api.Controllers
                 return BadRequest(new { erro = "Plano inválido. Use: mensal, trimestral ou anual." });
 
             var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var email = User.FindFirst(ClaimTypes.Email)!.Value;
+            var email = User.FindFirst(ClaimTypes.Email)?.Value
+                    ?? User.FindFirst("email")?.Value; // Supabase coloca o email nessa claim
+
+            if (string.IsNullOrEmpty(email))
+                return BadRequest(new { erro = "E-mail não encontrado no token." });
 
             var (sucesso, erro, url) = await _assinaturaService.IniciarAssinatura(
                 userId: userId,

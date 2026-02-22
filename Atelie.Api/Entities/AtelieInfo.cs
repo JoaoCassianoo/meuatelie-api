@@ -26,4 +26,6 @@ public class AtelieInfo
 
     // Link para o cliente pagar o PIX
     public string? BillingUrl { get; set; }
+    public string Telefone { get; set; } = string.Empty;   // novo
+    public string CpfCnpj { get; set; } = string.Empty;  
 }

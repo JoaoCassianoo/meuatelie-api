@@ -16,88 +16,72 @@ namespace Atelie.Api.Services
         }
 
         public async Task<(string BillingId, string BillingUrl)> CriarCobrancaAsync(
-            string userId,
-            string nomeDono,
+            Guid userId,
+            string nomeCompleto,
             string email,
-            string nomeAtelie,
-            string periocidade)
+            string telefone,
+            string cpfCnpj,
+            string periocidade
+        )
         {
-            object[] products = Array.Empty<object>();
-
-            if (periocidade == "mensal")
+            var (externalId, nome, descricao, preco) = periocidade switch
             {
-                products = new[]
-                {
-                    new
-                    {
-                        externalId = "pro-mensal",
-                        name = "Plano Pro",
-                        description = $"Assinatura Pro - {nomeAtelie}",
-                        quantity = 1,
-                        price = 4000
-                    }
-                };
-            }
-            else if (periocidade == "trimestral")
-            {
-                products = new[]
-                {
-                    new
-                    {
-                        externalId = "pro-trimestral",
-                        name = "Plano Pro Trimestral",
-                        description = $"Assinatura Pro Trimestral - {nomeAtelie}",
-                        quantity = 1,
-                        price = 10800
-                    }
-                };
-            }
-            else if (periocidade == "anual")
-            {
-                products = new[]
-                {
-                    new
-                    {
-                        externalId = "pro-anual",
-                        name = "Plano Pro Anual",
-                        description = $"Assinatura Pro Anual - {nomeAtelie}",
-                        quantity = 1,
-                        price = 36000
-                    }
-                };
-            }
+                "mensal"     => ("pro-mensal",     "Plano Pro Mensal",     "Assinatura Pro Mensal",     4000),
+                "trimestral" => ("pro-trimestral", "Plano Pro Trimestral", "Assinatura Pro Trimestral", 10800),
+                "anual"      => ("pro-anual",      "Plano Pro Anual",      "Assinatura Pro Anual",      36000),
+                _            => throw new ArgumentException($"Periodicidade inválida: {periocidade}")
+            };
 
             var payload = new
             {
                 frequency = "MULTIPLE_PAYMENTS",
                 methods = new[] { "PIX" },
-                products = products,
-                returnUrl = "https://meuatelie.vercel.app/#perfil",
-                completionUrl = "https://meuatelie.vercel.app/#perfil",
+                products = new[]
+                {
+                    new
+                    {
+                        externalId = externalId,
+                        name = nome,
+                        description = descricao,
+                        quantity = 1,
+                        price = preco
+                    }
+                },
                 customer = new
                 {
-                    name = nomeDono,
+                    name = nomeCompleto,
                     email = email,
-                    cellphone = "",
-                    taxId = ""
+                    cellphone = telefone,
+                    taxId = cpfCnpj
                 },
-                externalId = userId
+                externalId = userId,
+                returnUrl = "https://meuatelie.vercel.app/#perfil",
+                completionUrl = "https://meuatelie.vercel.app/#perfil",
             };
 
             var response = await _http.PostAsJsonAsync($"{BaseUrl}/billing/create", payload);
 
-
-            // troca o EnsureSuccessStatusCode por isso para ver o erro real
             if (!response.IsSuccessStatusCode)
             {
-                var erroDetalhado = await response.Content.ReadAsStringAsync();
-                throw new Exception($"AbacatePay erro {(int)response.StatusCode}: {erroDetalhado}");
+                var erro = await response.Content.ReadAsStringAsync();
+                throw new Exception($"AbacatePay erro {(int)response.StatusCode}: {erro}");
             }
 
-            var result = await response.Content
-                .ReadFromJsonAsync<AbacateApiResponse<BillingData>>();
-                
-            return (result!.Data.Id, result.Data.Url);;
+            // adiciona isso antes de desserializar
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"AbacatePay resposta: {json}");
+
+            var options = new System.Text.Json.JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true 
+            };
+
+            var result = System.Text.Json.JsonSerializer.Deserialize<AbacateApiResponse<BillingData>>(json, options);
+
+            if (result?.Data == null)
+                throw new Exception($"AbacatePay retornou resposta inválida: {json}");
+
+            return (result.Data.Id, result.Data.Url);
         }
     }
 }

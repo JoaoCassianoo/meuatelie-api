@@ -92,7 +92,9 @@ public class AtelieService
                 Status = "trial",
                 Plano = "free",
                 DataVencimento = DateTime.UtcNow, // 14 dias de trial
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Telefone = dto.Telefone,
+                CpfCnpj = dto.CpfCnpj
             };
 
             _context.AtelieInfo.Add(atelieInfo);
