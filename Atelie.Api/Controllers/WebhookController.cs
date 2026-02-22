@@ -25,6 +25,8 @@ namespace Atelie.Api.Controllers
             if (secret != _config["AbacatePay:WebhookSecret"])
                 return Unauthorized();
 
+            Console.WriteLine(payload.Data.Billing.ExternalId);
+
             if (payload.Event == "billing.paid")
             {
                 var userId = payload.Data.Billing.ExternalId;

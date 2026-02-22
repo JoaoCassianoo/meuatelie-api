@@ -72,23 +72,31 @@ namespace Atelie.Api.Services
                 frequency = "MULTIPLE_PAYMENTS",
                 methods = new[] { "PIX" },
                 products = products,
-                returnUrl = "",
-                completionUrl = "",
+                returnUrl = "https://meuatelie.vercel.app/#perfil",
+                completionUrl = "https://meuatelie.vercel.app/#perfil",
                 customer = new
                 {
                     name = nomeDono,
-                    email = email
+                    email = email,
+                    cellphone = "",
+                    taxId = ""
                 },
                 externalId = userId
             };
 
             var response = await _http.PostAsJsonAsync($"{BaseUrl}/billing/create", payload);
-            response.EnsureSuccessStatusCode();
+
+            // troca o EnsureSuccessStatusCode por isso para ver o erro real
+            if (!response.IsSuccessStatusCode)
+            {
+                var erroDetalhado = await response.Content.ReadAsStringAsync();
+                throw new Exception($"AbacatePay erro {(int)response.StatusCode}: {erroDetalhado}");
+            }
 
             var result = await response.Content
                 .ReadFromJsonAsync<AbacateApiResponse<BillingData>>();
 
-            return (result!.Data.Id, result.Data.Url);
+            return (result!.Data.Id, result.Data.Url);;
         }
     }
 }

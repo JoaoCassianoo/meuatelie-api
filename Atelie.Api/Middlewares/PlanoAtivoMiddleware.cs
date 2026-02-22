@@ -4,6 +4,13 @@ public class PlanoAtivoMiddleware
 {
     private readonly RequestDelegate _next;
 
+    // rotas que ficam livres mesmo com plano expirado
+    private static readonly string[] RotasLiberadas = new[]
+    {
+        "/api/assinatura/iniciar",
+        "/api/webhook/abacatepay"
+    };
+
     public PlanoAtivoMiddleware(RequestDelegate next)
     {
         _next = next;
@@ -11,7 +18,14 @@ public class PlanoAtivoMiddleware
 
     public async Task InvokeAsync(HttpContext context, AtelieService atelieService)
     {
-        // só valida se estiver logado
+        // deixa passar rotas liberadas sem verificar plano
+        var path = context.Request.Path.Value?.ToLower();
+        if (RotasLiberadas.Any(r => path?.StartsWith(r) == true))
+        {
+            await _next(context);
+            return;
+        }
+
         if (context.User.Identity?.IsAuthenticated == true)
         {
             var userIdStr = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -31,7 +45,6 @@ public class PlanoAtivoMiddleware
 
                     return;
                 }
-
             }
         }
 
