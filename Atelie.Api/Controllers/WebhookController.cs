@@ -22,10 +22,10 @@ namespace Atelie.Api.Controllers
         [HttpPost("pagamento")]
         [AllowAnonymous]
         public async Task<IActionResult> Receber(
-            [FromQuery] string secret,
+            [FromQuery] string webhookSecret,
             [FromBody] WebhookPayload payload)
         {
-            if (secret != _config["AbacatePay:WebhookSecret"])
+            if (webhookSecret != _config["AbacatePay:WebhookSecret"])
                 return Unauthorized();
 
             Console.WriteLine(payload.Data.Billing.ExternalId);
