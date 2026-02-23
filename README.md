@@ -2,7 +2,7 @@
 
 # ✂️ Meu Ateliê — API
 
-**API REST para gestão completa do Ateliê Janainy Fiel**
+**API REST para gestão completa de Ateliês**
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com)
 [![C#](https://img.shields.io/badge/C%23-99.5%25-239120?style=for-the-badge&logo=csharp)](https://learn.microsoft.com/dotnet/csharp)
