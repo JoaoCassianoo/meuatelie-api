@@ -15,5 +15,5 @@ public class MovimentacaoFinanceiro
     public ContextoFinanceiro Contexto { get; set; }
     public MeioPagamento MeioPagamento { get; set; }
 
-    public DateTime Data { get; set; } = DateTime.Now;
+    public DateTime Data { get; set; } = DateTime.UtcNow;
 }

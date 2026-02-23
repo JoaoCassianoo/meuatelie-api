@@ -53,6 +53,27 @@ namespace Atelie.Api.Services
             return await query.OrderByDescending(v => v.Data).ToListAsync();
         }
         
+        public async Task<Venda> Atualizar(Guid userId, int vendaId, decimal? valorVenda = null, string? cliente = null, string? observacao = null)
+        {
+            var venda = await _context.Vendas.FirstOrDefaultAsync(v => v.Id == vendaId && v.UserId == userId);
+            if (venda == null)
+                throw new ArgumentException("Venda não encontrada");
+
+            if (valorVenda.HasValue)
+                venda.ValorVenda = valorVenda.Value;
+
+            if (cliente != null)
+                venda.Cliente = cliente;
+
+            if (observacao != null)
+                venda.Observacao = observacao;
+
+            _context.Vendas.Update(venda);
+            await _context.SaveChangesAsync();
+
+            return venda;
+        }
+        
         public async Task<bool> Deletar(Guid userId, int vendaId)
         {
             var venda = await _context.Vendas.FirstOrDefaultAsync(v => v.Id == vendaId && v.UserId == userId);

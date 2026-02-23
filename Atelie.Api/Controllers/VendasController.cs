@@ -57,6 +57,28 @@ namespace Atelie.Api.Controllers
             return Ok(vendas);
         }
 
+        // PUT: api/Vendas/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Atualizar(int id, [FromBody] VendaDto dto)
+        {
+            try
+            {
+                var userId = ObterUsuarioId();
+                var venda = await _service.Atualizar(
+                    userId,
+                    id,
+                    dto.ValorVenda,
+                    dto.Cliente,
+                    dto.Observacao
+                );
+                return Ok(venda);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // DELETE: api/Vendas/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deletar(int id)
